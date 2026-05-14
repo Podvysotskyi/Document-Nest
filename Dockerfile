@@ -1,5 +1,5 @@
 # Stage 1: Build PHP dependencies
-FROM dunglas/frankenphp:php8.5-alpine as php-build
+FROM dunglas/frankenphp:php8.5-alpine AS php-build
 
 WORKDIR /var/www/html
 
@@ -12,7 +12,7 @@ RUN apk add --no-cache git unzip \
 RUN composer dump-autoload --optimize --no-dev
 
 # Stage 2: Build JS assets
-FROM node:22-alpine as node-build
+FROM node:22-alpine AS node-build
 
 WORKDIR /var/www/html
 
@@ -24,7 +24,7 @@ COPY --from=php-build /var/www/html/vendor ./vendor
 RUN npm run build
 
 # Stage 3: Base PHP environment
-FROM php:8.5-alpine as php-base
+FROM php:8.5-alpine AS php-base
 
 WORKDIR /var/www/html
 
@@ -56,7 +56,7 @@ VOLUME ["/var/www/html/storage"]
 ENTRYPOINT ["entrypoint.sh"]
 
 # Stage 4: App image (FrankenPHP)
-FROM dunglas/frankenphp:php8.5-alpine as app
+FROM dunglas/frankenphp:php8.5-alpine AS app
 
 LABEL maintainer="Serhii Podvysotskyi"
 
@@ -84,6 +84,8 @@ COPY --from=php-base /usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
 # Copy configurations
 COPY docker/Caddyfile.json /etc/caddy/Caddyfile
 
+VOLUME ["/var/www/html/storage"]
+
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp
 
 EXPOSE 80 443 443/udp
@@ -92,7 +94,7 @@ ENTRYPOINT ["entrypoint.sh"]
 CMD ["php-server"]
 
 # Stage 5: Worker image
-FROM php-base as worker
+FROM php-base AS worker
 
 LABEL maintainer="Serhii Podvysotskyi"
 
