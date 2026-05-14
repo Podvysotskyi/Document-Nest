@@ -4,33 +4,32 @@ namespace App\Http\Controllers\Documents;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EditDocumentRequest;
-use App\Models\Category;
+use App\Http\Resources\CategoryResource;
+use App\Http\Resources\DocumentEditResource;
+use App\Http\Resources\TagResource;
 use App\Models\Document;
-use App\Models\Tag;
+use App\Repositories\CategoryRepository;
+use App\Repositories\DocumentRepository;
+use App\Repositories\TagRepository;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class EditDocumentController extends Controller
 {
+    public function __construct(
+        private DocumentRepository $documentRepository,
+        private CategoryRepository $categoryRepository,
+        private TagRepository $tagRepository
+    ) {}
+
     public function __invoke(EditDocumentRequest $request, Document $document): Response
     {
-        $document->load('tags:id');
+        $document = $this->documentRepository->loadForShow($document);
 
         return Inertia::render('Documents/Edit', [
-            'document' => [
-                ...$document->only([
-                    'id',
-                    'title',
-                    'category_id',
-                    'notes',
-                    'status',
-                    'issue_date',
-                    'expiry_date',
-                ]),
-                'tag_ids' => $document->tags->pluck('id')->all(),
-            ],
-            'categories' => Category::query()->ownedBy($request->user())->orderBy('name')->get(['id', 'name']),
-            'tags' => Tag::query()->ownedBy($request->user())->orderBy('name')->get(['id', 'name']),
+            'document' => DocumentEditResource::make($document)->resolve(),
+            'categories' => CategoryResource::collection($this->categoryRepository->listForUser($request->user()))->resolve(),
+            'tags' => TagResource::collection($this->tagRepository->listForUser($request->user()))->resolve(),
             'statuses' => [
                 Document::STATUS_ACTIVE,
                 Document::STATUS_EXPIRED,

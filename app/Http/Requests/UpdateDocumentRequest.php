@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\DTOs\UpdateDocumentData;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,6 +10,21 @@ use Illuminate\Validation\Rule;
 
 class UpdateDocumentRequest extends FormRequest
 {
+    public function toDto(): UpdateDocumentData
+    {
+        $validated = $this->validated();
+
+        return new UpdateDocumentData(
+            title: $validated['title'],
+            categoryId: $validated['category_id'] ?? null,
+            tagIds: $validated['tag_ids'] ?? [],
+            notes: $validated['notes'] ?? null,
+            issueDate: $validated['issue_date'] ?? null,
+            expiryDate: $validated['expiry_date'] ?? null,
+            status: $validated['status'],
+        );
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      */

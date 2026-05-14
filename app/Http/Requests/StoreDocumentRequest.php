@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\DTOs\StoreDocumentData;
 use App\Models\Document;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Query\Builder;
@@ -11,6 +12,22 @@ use Illuminate\Validation\Rules\File;
 
 class StoreDocumentRequest extends FormRequest
 {
+    public function toDto(): StoreDocumentData
+    {
+        $validated = $this->validated();
+
+        return new StoreDocumentData(
+            file: $validated['file'],
+            title: $validated['title'],
+            categoryId: $validated['category_id'] ?? null,
+            tagIds: $validated['tag_ids'] ?? [],
+            notes: $validated['notes'] ?? null,
+            issueDate: $validated['issue_date'] ?? null,
+            expiryDate: $validated['expiry_date'] ?? null,
+            status: $validated['status'] ?? null,
+        );
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      */

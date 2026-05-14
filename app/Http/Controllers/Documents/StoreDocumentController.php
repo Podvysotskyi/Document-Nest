@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Documents;
 
-use App\DTOs\StoreDocumentData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Repositories\DocumentRepository;
@@ -16,7 +15,7 @@ class StoreDocumentController extends Controller
     {
         $document = $this->documentRepository->createForUser(
             $request->user(),
-            StoreDocumentData::fromArray($request->validated()),
+            $request->toDto(),
         );
 
         return redirect()->route('documents.show', $document);

@@ -8,6 +8,8 @@ use App\DTOs\UpdateDocumentData;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentRepository
 {
@@ -77,5 +79,39 @@ class DocumentRepository
         $document->tags()->sync($data->tagIds);
 
         return $document;
+    }
+
+    public function loadForShow(Document $document): Document
+    {
+        return $document->load(['category:id,name', 'tags:id,name']);
+    }
+
+    public function archive(Document $document): Document
+    {
+        $document->update([
+            'status' => Document::STATUS_ARCHIVED,
+            'archived_at' => now(),
+        ]);
+
+        return $document;
+    }
+
+    public function delete(Document $document): void
+    {
+        Storage::disk('local')->delete($document->stored_path);
+        $document->delete();
+    }
+
+    public function streamPreview(Document $document): StreamedResponse
+    {
+        return Storage::disk('local')->response(
+            $document->stored_path,
+            headers: ['Content-Type' => $document->mime_type],
+        );
+    }
+
+    public function streamDownload(Document $document): StreamedResponse
+    {
+        return Storage::disk('local')->download($document->stored_path, $document->original_filename);
     }
 }
