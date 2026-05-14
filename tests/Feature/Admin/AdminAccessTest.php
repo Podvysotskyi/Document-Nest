@@ -33,6 +33,21 @@ class AdminAccessTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Admin/Dashboard')
                 ->where('auth.user.is_admin', true)
+                ->where('canManageRoadmap', true)
+            );
+    }
+
+    public function test_admin_dashboard_hides_roadmap_management_in_production(): void
+    {
+        $this->app->detectEnvironment(fn (): string => 'production');
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Dashboard')
+                ->where('canManageRoadmap', false)
             );
     }
 

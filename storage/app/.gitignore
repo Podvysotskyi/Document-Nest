@@ -2,5 +2,5 @@
 !private/
 !public/
 !data/
-!data/roadmap.json
+!data/.gitignore
 !.gitignore

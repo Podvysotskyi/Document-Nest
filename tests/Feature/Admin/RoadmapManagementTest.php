@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\Roadmap\RoadmapItem;
+use App\Models\Roadmap\RoadmapPhase;
 use App\Models\User;
-use Illuminate\Support\Facades\Storage;
+use App\Services\RoadmapService;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -13,7 +15,6 @@ class RoadmapManagementTest extends TestCase
     {
         parent::setUp();
 
-        Storage::fake('roadmap');
         $this->storeRoadmap([
             [
                 'id' => 1,
@@ -41,6 +42,16 @@ class RoadmapManagementTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.roadmap.index'))
             ->assertForbidden();
+    }
+
+    public function test_admin_user_cannot_view_roadmap_management_in_production(): void
+    {
+        $this->app->detectEnvironment(fn (): string => 'production');
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.roadmap.index'))
+            ->assertNotFound();
     }
 
     public function test_admin_user_can_view_roadmap_management(): void
@@ -219,9 +230,19 @@ class RoadmapManagementTest extends TestCase
      */
     private function storeRoadmap(array $phases): void
     {
-        Storage::disk('roadmap')->put('data/roadmap.json', json_encode([
-            'phases' => $phases,
-        ], JSON_THROW_ON_ERROR));
+        RoadmapItem::query()->delete();
+        RoadmapPhase::query()->delete();
+
+        foreach ($phases as $phaseData) {
+            $items = $phaseData['items'];
+            unset($phaseData['items']);
+
+            $phase = RoadmapPhase::factory()->create($phaseData);
+
+            foreach ($items as $itemData) {
+                RoadmapItem::factory()->for($phase, 'phase')->create($itemData);
+            }
+        }
     }
 
     /**
@@ -229,6 +250,8 @@ class RoadmapManagementTest extends TestCase
      */
     private function roadmap(): array
     {
-        return json_decode(Storage::disk('roadmap')->get('data/roadmap.json'), true, flags: JSON_THROW_ON_ERROR);
+        return [
+            'phases' => app(RoadmapService::class)->allPhasesForAdmin(),
+        ];
     }
 }
