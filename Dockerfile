@@ -86,7 +86,7 @@ VOLUME ["/var/www/html/storage"]
 EXPOSE 8000
 
 ENTRYPOINT ["entrypoint.sh"]
-CMD ["php", "artisan", "octane:frankenphp"]
+CMD ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0"]
 
 # Stage 5: Worker image
 FROM php-base AS worker
