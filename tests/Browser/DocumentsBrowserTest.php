@@ -26,7 +26,7 @@ test('authenticated user can navigate through dashboard and documents', function
             ->assertSee('Browser Test Document')
 
             // Navigate to document show page
-            ->clickLink('Browser Test Document')
+            ->click('table tbody tr:first-child')
             ->waitForText('Edit')
             ->assertPathIs('/documents/'.$document->id)
             ->assertSee('Browser Test Document')
@@ -46,10 +46,10 @@ test('authenticated user can navigate through dashboard and documents', function
             ->assertSee('active')
 
             // Navigate to edit page
-            ->clickLink('Edit')
+            ->click('a[href$="/edit"]')
             ->waitForText('Edit Document')
             ->assertPathIs('/documents/'.$document->id.'/edit')
             ->assertSee('Edit Document')
-            ->assertValue('input[placeholder="Title"]', 'Browser Test Document');
+            ->assertValue('input[placeholder="e.g. Identity Card"]', 'Browser Test Document');
     });
 });

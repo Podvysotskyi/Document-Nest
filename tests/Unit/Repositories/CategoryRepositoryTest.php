@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Document;
 use App\Models\User;
 use App\Repositories\CategoryRepository;
 
@@ -28,4 +29,17 @@ test('category repository returns only categories owned by user ordered by name'
         'Work',
         'WorkX',
     ]);
+});
+
+test('category repository can filter categories that have documents', function () {
+    $user = User::factory()->create();
+    $categoryWithDoc = $user->categories()->where('name', 'Finance')->first();
+    $categoryWithoutDoc = $user->categories()->where('name', 'Health')->first();
+
+    Document::factory()->for($user)->for($categoryWithDoc)->create();
+
+    $categories = app(CategoryRepository::class)->listForUser($user, onlyWithDocuments: true);
+
+    expect($categories)->toHaveCount(1);
+    expect($categories->first()->id)->toBe($categoryWithDoc->id);
 });

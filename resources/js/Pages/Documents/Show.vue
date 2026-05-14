@@ -1,12 +1,29 @@
 <script setup>
-import {Head, Link, router} from '@inertiajs/vue3'
+import {Head, router} from '@inertiajs/vue3'
+import {ArchiveBoxIcon, ArrowDownTrayIcon, ArrowPathIcon, PencilIcon} from '@heroicons/vue/24/outline'
 import AppLayout from '../../Layouts/AppLayout.vue'
+import Button from '../../Components/UI/Button.vue'
+import Badge from '../../Components/UI/Badge.vue'
+import Card from '../../Components/UI/Card.vue'
 
 const props = defineProps({
     document: Object,
     previewUrl: String,
     downloadUrl: String,
 })
+
+const getStatusVariant = (status) => {
+    switch (status) {
+        case 'active':
+            return 'success'
+        case 'expired':
+            return 'danger'
+        case 'archived':
+            return 'neutral'
+        default:
+            return 'neutral'
+    }
+}
 
 const archive = () => {
     router.post(`/documents/${props.document.id}/archive`)
@@ -21,43 +38,88 @@ const restore = () => {
     <Head :title="document.title" />
 
     <AppLayout>
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-semibold">{{ document.title }}</h1>
+        <div class="space-y-6">
+            <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-3xl font-bold tracking-tight text-zinc-900">{{ document.title }}</h1>
+                        <Badge :variant="getStatusVariant(document.status)">
+                            {{ document.status }}
+                        </Badge>
+                    </div>
+                    <p class="mt-1 text-sm text-zinc-500">
+                        Uploaded by {{ document.user?.name || 'you' }} • Last updated {{ document.updated_at }}
+                    </p>
+                </div>
                 <div class="flex items-center gap-2">
-                    <Link :href="`/documents/${document.id}/edit`" class="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                    <Button :href="`/documents/${document.id}/edit`" variant="secondary">
+                        <PencilIcon class="mr-2 h-4 w-4"/>
                         Edit
-                    </Link>
-                    <button v-if="document.status === 'archived'" class="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
-                            type="button"
-                            @click="restore">
+                    </Button>
+                    <Button v-if="document.status === 'archived'" variant="secondary" @click="restore">
+                        <ArrowPathIcon class="mr-2 h-4 w-4"/>
                         Restore
-                    </button>
-                    <button v-else class="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
-                            type="button"
-                            @click="archive">
+                    </Button>
+                    <Button v-else variant="secondary" @click="archive">
+                        <ArchiveBoxIcon class="mr-2 h-4 w-4"/>
                         Archive
-                    </button>
-                    <a :href="downloadUrl" class="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white">Download</a>
+                    </Button>
+                    <Button :href="downloadUrl" as="a" target="_blank">
+                        <ArrowDownTrayIcon class="mr-2 h-4 w-4"/>
+                        Download
+                    </Button>
                 </div>
-            </div>
+            </header>
 
-            <div class="grid gap-4 md:grid-cols-3">
-                <div class="rounded-md border border-zinc-200 bg-white p-3 text-sm">
-                    <p><span class="font-medium">Status:</span> {{ document.status }}</p>
-                    <p><span class="font-medium">Category:</span> {{ document.category?.name ?? '—' }}</p>
-                    <p><span class="font-medium">Issue:</span> {{ document.issue_date ?? '—' }}</p>
-                    <p><span class="font-medium">Expiry:</span> {{ document.expiry_date ?? '—' }}</p>
-                    <p><span class="font-medium">File:</span> {{ document.original_filename }}</p>
+            <div class="grid gap-6 lg:grid-cols-3">
+                <div class="space-y-6 lg:col-span-2">
+                    <Card padding="p-0">
+                        <div class="aspect-4/3 w-full overflow-hidden bg-zinc-100 sm:aspect-auto sm:h-[70vh]">
+                            <iframe :src="previewUrl" class="h-full w-full border-none" title="Document preview"/>
+                        </div>
+                    </Card>
                 </div>
-                <div class="rounded-md border border-zinc-200 bg-white p-3 text-sm md:col-span-2">
-                    <p class="mb-2 font-medium">Notes</p>
-                    <p class="text-zinc-700">{{ document.notes || 'No notes.' }}</p>
-                </div>
-            </div>
 
-            <div class="overflow-hidden rounded-md border border-zinc-200 bg-white">
-                <iframe :src="previewUrl" class="h-[70vh] w-full" title="Document preview" />
+                <div class="space-y-6">
+                    <Card title="Document Details">
+                        <dl class="space-y-4 text-sm">
+                            <div>
+                                <dt class="font-medium text-zinc-500">Category</dt>
+                                <dd class="mt-1 font-semibold text-zinc-900">
+                                    {{ document.category?.name ?? 'Uncategorized' }}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="font-medium text-zinc-500">Original Filename</dt>
+                                <dd class="mt-1 font-mono text-xs text-zinc-900">{{ document.original_filename }}</dd>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 border-t border-zinc-100 pt-4">
+                                <div>
+                                    <dt class="font-medium text-zinc-500">Issue Date</dt>
+                                    <dd class="mt-1 font-semibold text-zinc-900">{{ document.issue_date ?? '—' }}</dd>
+                                </div>
+                                <div>
+                                    <dt class="font-medium text-zinc-500">Expiry Date</dt>
+                                    <dd class="mt-1 font-semibold text-zinc-900">{{ document.expiry_date ?? '—' }}</dd>
+                                </div>
+                            </div>
+                        </dl>
+                    </Card>
+
+                    <Card title="Notes">
+                        <p class="whitespace-pre-wrap text-sm leading-relaxed text-zinc-600">
+                            {{ document.notes || 'No notes provided for this document.' }}
+                        </p>
+                    </Card>
+
+                    <Card v-if="document.tags?.length" title="Tags">
+                        <div class="flex flex-wrap gap-2">
+                            <Badge v-for="tag in document.tags" :key="tag.id" variant="info">
+                                {{ tag.name }}
+                            </Badge>
+                        </div>
+                    </Card>
+                </div>
             </div>
         </div>
     </AppLayout>

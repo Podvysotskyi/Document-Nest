@@ -11,11 +11,16 @@ class CategoryRepository
     /**
      * @return Collection<int, Category>
      */
-    public function listForUser(User $user): Collection
+    public function listForUser(User $user, bool $onlyWithDocuments = false): Collection
     {
-        return Category::query()
-            ->ownedBy($user)
-            ->orderBy('name')
+        $query = Category::query()
+            ->ownedBy($user);
+
+        if ($onlyWithDocuments) {
+            $query->has('documents');
+        }
+
+        return $query->orderBy('name')
             ->get(['id', 'name']);
     }
 }

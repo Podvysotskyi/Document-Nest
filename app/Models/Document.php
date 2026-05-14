@@ -60,16 +60,16 @@ class Document extends Model
 
     public function scopeActive(Builder $query): void
     {
-        $query->where('status', DocumentStatus::Active);
+        $query->where($this->qualifyColumn('status'), DocumentStatus::Active);
     }
 
     public function scopeArchived(Builder $query): void
     {
-        $query->where('status', DocumentStatus::Archived);
+        $query->where($this->qualifyColumn('status'), DocumentStatus::Archived);
     }
 
     public function scopeOwnedBy(Builder $query, User $user): void
     {
-        $query->where('user_id', $user->id);
+        $query->where($this->qualifyColumn('user_id'), $user->id);
     }
 }

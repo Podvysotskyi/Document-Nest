@@ -47,6 +47,7 @@ test('document repository paginates user-owned documents with filters', function
         expiryFrom: now()->toDateString(),
         expiryTo: now()->addDays(30)->toDateString(),
         sort: 'newest',
+        direction: 'desc',
     );
 
     $paginator = app(DocumentRepository::class)->paginateForUser($user, $filters);

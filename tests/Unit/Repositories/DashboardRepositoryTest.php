@@ -47,5 +47,6 @@ test('dashboard repository returns scoped aggregate metrics', function () {
     expect($repository->expiringSoon($user))->toHaveCount(1);
     expect($repository->missingExpiry($user))->toHaveCount(1);
     expect($repository->documentsByCategory($user)->first()->name)->toBe('Finance');
+    expect($repository->documentsByCategory($user))->toHaveCount(1);
     expect($repository->uncategorizedCount($user))->toBe(1);
 });

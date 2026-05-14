@@ -78,6 +78,7 @@ class DashboardRepository
     {
         return Category::query()
             ->ownedBy($user)
+            ->has('documents')
             ->withCount('documents')
             ->orderByDesc('documents_count')
             ->get(['id', 'name']);

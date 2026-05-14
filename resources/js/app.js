@@ -1,18 +1,20 @@
 import '../css/app.css'
 
-import { createInertiaApp } from '@inertiajs/vue3'
-import { createApp, h } from 'vue'
+import {createInertiaApp, Head, Link} from '@inertiajs/vue3'
+import {createApp, h} from 'vue'
 
-await createInertiaApp({
-    title: (title) => `${title} - Document Nest`,
-    resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true })
-
-        return pages[`./Pages/${name}.vue`]
-    },
-    setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
+createInertiaApp({
+    title: (title) => title ? `${title} - Document Nest` : 'Document Nest',
+    setup({el, App, props, plugin}) {
+        const app = createApp({render: () => h(App, props)})
             .use(plugin)
-            .mount(el)
+            .component('Link', Link)
+            .component('Head', Head)
+
+        if (typeof window !== 'undefined') {
+            app.mount(el)
+        }
+
+        return app
     },
 })

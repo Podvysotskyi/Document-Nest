@@ -36,7 +36,7 @@ test('authenticated user can view dashboard', function () {
         ->has('recent_uploads', 2)
         ->has('expiring_soon', 1)
         ->has('missing_expiry', 1)
-        ->has('documents_by_category', 9)
+        ->has('documents_by_category', 1)
         ->where('documents_by_category.0.category_name', 'Finance')
     );
 });

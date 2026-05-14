@@ -1,0 +1,42 @@
+{
+    "resources/js/Components/UI/Badge.vue": [
+        "/build/assets/Badge-DXJPokTZ.js"
+    ],
+    "resources/js/Components/UI/Button.vue": [
+        "/build/assets/Button-BKBm8czA.js"
+    ],
+    "resources/js/Components/UI/Card.vue": [
+        "/build/assets/Card-Cxv5bgu1.js"
+    ],
+    "resources/js/Components/UI/Input.vue": [
+        "/build/assets/Select-CzueStu9.js"
+    ],
+    "resources/js/Components/UI/Select.vue": [
+        "/build/assets/Select-CzueStu9.js"
+    ],
+    "resources/js/Components/UI/Textarea.vue": [
+        "/build/assets/Textarea-BytBwBdx.js"
+    ],
+    "resources/js/Layouts/AppLayout.vue": [
+        "/build/assets/Card-Cxv5bgu1.js"
+    ],
+    "resources/js/Pages/Dashboard.vue": [
+        "/build/assets/Dashboard--942u0xm.js"
+    ],
+    "resources/js/Pages/Documents/Create.vue": [
+        "/build/assets/Create-BjfE9_9i.js"
+    ],
+    "resources/js/Pages/Documents/Edit.vue": [
+        "/build/assets/Edit-CMFNvO2r.js"
+    ],
+    "resources/js/Pages/Documents/Index.vue": [
+        "/build/assets/Index-RLUyPoGl.js"
+    ],
+    "resources/js/Pages/Documents/Show.vue": [
+        "/build/assets/Show-CCBInRmB.js"
+    ],
+    "resources/js/Pages/Error.vue": [
+        "/build/assets/Error-Cd_HPUZ6.js"
+    ],
+    "resources/js/ssr.js": []
+}

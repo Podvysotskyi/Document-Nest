@@ -32,6 +32,52 @@ test('authenticated user can view documents index with filters', function () {
         ->component('Documents/Index')
         ->has('documents.data', 1)
         ->where('documents.data.0.title', 'Finance Doc')
+        ->has('categories', 1)
+        ->where('categories.0.name', 'Finance')
+    );
+});
+
+test('authenticated user can sort documents by category', function () {
+    $user = User::factory()->create();
+
+    // The categories are created by the UserObserver
+    $categoryA = $user->categories()->orderBy('name')->first();
+    $categoryB = $user->categories()->orderBy('name', 'desc')->first();
+
+    Document::factory()->for($user)->create([
+        'category_id' => $categoryA->id,
+        'title' => 'Doc in Category A',
+    ]);
+
+    Document::factory()->for($user)->create([
+        'category_id' => $categoryB->id,
+        'title' => 'Doc in Category B',
+    ]);
+
+    // Sorting by category ASC
+    $response = $this->actingAs($user)->get(route('documents.index', [
+        'sort' => 'category',
+        'direction' => 'asc',
+    ]));
+
+    $response->assertStatus(200);
+    $response->assertInertia(fn (Assert $page) => $page
+        ->has('documents.data', 2)
+        ->where('documents.data.0.title', 'Doc in Category A')
+        ->where('documents.data.1.title', 'Doc in Category B')
+    );
+
+    // Sorting by category DESC
+    $response = $this->actingAs($user)->get(route('documents.index', [
+        'sort' => 'category',
+        'direction' => 'desc',
+    ]));
+
+    $response->assertStatus(200);
+    $response->assertInertia(fn (Assert $page) => $page
+        ->has('documents.data', 2)
+        ->where('documents.data.0.title', 'Doc in Category B')
+        ->where('documents.data.1.title', 'Doc in Category A')
     );
 });
 

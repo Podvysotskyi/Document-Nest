@@ -19,6 +19,7 @@ class IndexDocumentRequest extends FormRequest
     public function toDto(): DocumentFiltersData
     {
         $validated = $this->validated();
+        $sort = $validated['sort'] ?? 'newest';
 
         return new DocumentFiltersData(
             query: $validated['q'] ?? null,
@@ -27,7 +28,8 @@ class IndexDocumentRequest extends FormRequest
             status: isset($validated['status']) ? DocumentStatus::from($validated['status']) : null,
             expiryFrom: $validated['expiry_from'] ?? null,
             expiryTo: $validated['expiry_to'] ?? null,
-            sort: $validated['sort'] ?? 'newest',
+            sort: $sort,
+            direction: $validated['direction'] ?? ($sort === 'newest' ? 'desc' : 'asc'),
         );
     }
 
@@ -43,7 +45,8 @@ class IndexDocumentRequest extends FormRequest
             'status' => ['nullable', Rule::enum(DocumentStatus::class)],
             'expiry_from' => ['nullable', 'date'],
             'expiry_to' => ['nullable', 'date'],
-            'sort' => ['nullable', Rule::in(['newest', 'oldest', 'title', 'expiry_date'])],
+            'sort' => ['nullable', Rule::in(['newest', 'oldest', 'title', 'expiry_date', 'status', 'category'])],
+            'direction' => ['nullable', Rule::in(['asc', 'desc'])],
         ];
     }
 }

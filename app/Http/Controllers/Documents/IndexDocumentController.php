@@ -38,7 +38,7 @@ class IndexDocumentController extends Controller
                 'expiry_to' => $filters->expiryTo ?? '',
                 'sort' => $filters->sort,
             ],
-            'categories' => CategoryResource::collection($this->categoryRepository->listForUser($request->user()))->resolve(),
+            'categories' => CategoryResource::collection($this->categoryRepository->listForUser($request->user(), true))->resolve(),
             'tags' => TagResource::collection($this->tagRepository->listForUser($request->user()))->resolve(),
         ]);
     }

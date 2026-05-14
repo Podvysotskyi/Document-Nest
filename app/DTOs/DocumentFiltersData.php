@@ -13,6 +13,7 @@ final readonly class DocumentFiltersData
         public ?DocumentStatus $status,
         public ?string $expiryFrom,
         public ?string $expiryTo,
-        public string $sort,
+        public ?string $sort,
+        public ?string $direction,
     ) {}
 }
