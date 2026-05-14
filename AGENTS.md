@@ -12,6 +12,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - php - 8.5
 - inertiajs/inertia-laravel (INERTIA_LARAVEL) - v3
 - laravel/framework (LARAVEL) - v13
+- laravel/octane (OCTANE) - v2
 - laravel/prompts (PROMPTS) - v0
 - laravel/socialite (SOCIALITE) - v5
 - laravel/boost (BOOST) - v2
@@ -173,6 +174,25 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
+=== octane/core rules ===
+
+# Octane
+
+- Octane boots the application once and reuses it across requests, so singletons persist between requests.
+- The Laravel container's `scoped` method may be used as a safe alternative to `singleton`.
+- Never inject the container, request, or config repository into a singleton's constructor; use a resolver closure or
+  `bind()` instead:
+
+```php
+// Bad
+$this->app->singleton(Service::class, fn (Application $app) => new Service($app['request']));
+
+// Good
+$this->app->singleton(Service::class, fn () => new Service(fn () => request()));
+```
+
+- Never append to static properties, as they accumulate in memory across requests.
+
 === pint/core rules ===
 
 # Laravel Pint Code Formatter
@@ -186,7 +206,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 - This application uses PHPUnit for testing. All tests must be written as PHPUnit classes. Use
   `php artisan make:test --phpunit {name}` to create a new test.
-- If you see a test using closure-style test definitions, convert it to a PHPUnit class.
+- If you see a test using "Pest", convert it to PHPUnit.
 - Every time a test has been updated, run that singular test.
 - When the tests relating to your feature are passing, ask the user if they would like to also run the entire test suite
   to make sure everything is still passing.
