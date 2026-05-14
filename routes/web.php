@@ -11,6 +11,7 @@ use App\Http\Controllers\Documents\DownloadDocumentController;
 use App\Http\Controllers\Documents\EditDocumentController;
 use App\Http\Controllers\Documents\IndexDocumentController;
 use App\Http\Controllers\Documents\PreviewDocumentController;
+use App\Http\Controllers\Documents\RestoreDocumentController;
 use App\Http\Controllers\Documents\ShowDocumentController;
 use App\Http\Controllers\Documents\StoreDocumentController;
 use App\Http\Controllers\Documents\UpdateDocumentController;
@@ -40,6 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::match(['put', 'patch'], '/documents/{document}', UpdateDocumentController::class)->name('documents.update');
     Route::delete('/documents/{document}', DestroyDocumentController::class)->name('documents.destroy');
     Route::post('/documents/{document}/archive', ArchiveDocumentController::class)->name('documents.archive');
+    Route::post('/documents/{document}/restore', RestoreDocumentController::class)->name('documents.restore');
     Route::get('/documents/{document}/preview', PreviewDocumentController::class)->name('documents.preview');
     Route::get('/documents/{document}/download', DownloadDocumentController::class)->name('documents.download');
 });

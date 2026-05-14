@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Documents;
 
+use App\Enums\DocumentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EditDocumentRequest;
 use App\Http\Resources\CategoryResource;
@@ -30,11 +31,7 @@ class EditDocumentController extends Controller
             'document' => DocumentEditResource::make($document)->resolve(),
             'categories' => CategoryResource::collection($this->categoryRepository->listForUser($request->user()))->resolve(),
             'tags' => TagResource::collection($this->tagRepository->listForUser($request->user()))->resolve(),
-            'statuses' => [
-                Document::STATUS_ACTIVE,
-                Document::STATUS_EXPIRED,
-                Document::STATUS_ARCHIVED,
-            ],
+            'statuses' => array_column(DocumentStatus::cases(), 'value'),
         ]);
     }
 }

@@ -31,6 +31,19 @@ test('authenticated user can navigate through dashboard and documents', function
             ->assertPathIs('/documents/'.$document->id)
             ->assertSee('Browser Test Document')
             ->assertSee('Edit')
+            ->assertSee('Archive')
+
+            // Archive the document
+            ->press('Archive')
+            ->waitForText('Restore')
+            ->assertSee('Restore')
+            ->assertSee('archived')
+
+            // Restore the document
+            ->press('Restore')
+            ->waitForText('Archive')
+            ->assertSee('Archive')
+            ->assertSee('active')
 
             // Navigate to edit page
             ->clickLink('Edit')

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\DTOs\StoreDocumentData;
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Query\Builder;
@@ -24,7 +25,7 @@ class StoreDocumentRequest extends FormRequest
             notes: $validated['notes'] ?? null,
             issueDate: $validated['issue_date'] ?? null,
             expiryDate: $validated['expiry_date'] ?? null,
-            status: $validated['status'] ?? null,
+            status: isset($validated['status']) ? DocumentStatus::from($validated['status']) : null,
         );
     }
 
@@ -66,7 +67,7 @@ class StoreDocumentRequest extends FormRequest
             'notes' => ['nullable', 'string'],
             'issue_date' => ['nullable', 'date'],
             'expiry_date' => ['nullable', 'date', 'after_or_equal:issue_date'],
-            'status' => ['nullable', Rule::in(['active', 'expired', 'archived'])],
+            'status' => ['nullable', Rule::enum(DocumentStatus::class)],
         ];
     }
 }

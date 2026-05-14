@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -23,7 +24,7 @@ class DocumentFactory extends Factory
             'category_id' => null,
             'title' => fake()->sentence(3),
             'notes' => fake()->optional()->sentence(),
-            'status' => Document::STATUS_ACTIVE,
+            'status' => DocumentStatus::Active,
             'issue_date' => fake()->dateTimeBetween('-2 years', '-1 month')->format('Y-m-d'),
             'expiry_date' => fake()->optional()->dateTimeBetween('+1 month', '+2 years')?->format('Y-m-d'),
             'original_filename' => fake()->bothify('document-####.pdf'),

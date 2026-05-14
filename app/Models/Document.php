@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DocumentStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -28,18 +29,13 @@ class Document extends Model
 {
     use HasFactory, HasUuids;
 
-    public const STATUS_ACTIVE = 'active';
-
-    public const STATUS_EXPIRED = 'expired';
-
-    public const STATUS_ARCHIVED = 'archived';
-
     /**
      * @return array<string, string>
      */
     protected function casts(): array
     {
         return [
+            'status' => DocumentStatus::class,
             'issue_date' => 'date',
             'expiry_date' => 'date',
             'archived_at' => 'datetime',
@@ -64,12 +60,12 @@ class Document extends Model
 
     public function scopeActive(Builder $query): void
     {
-        $query->where('status', self::STATUS_ACTIVE);
+        $query->where('status', DocumentStatus::Active);
     }
 
     public function scopeArchived(Builder $query): void
     {
-        $query->where('status', self::STATUS_ARCHIVED);
+        $query->where('status', DocumentStatus::Archived);
     }
 
     public function scopeOwnedBy(Builder $query, User $user): void

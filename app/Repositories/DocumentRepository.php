@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\DTOs\DocumentFiltersData;
 use App\DTOs\StoreDocumentData;
 use App\DTOs\UpdateDocumentData;
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -26,7 +27,7 @@ class DocumentRepository
                 });
             })
             ->when($filters->categoryId, fn ($builder, string $id) => $builder->where('category_id', $id))
-            ->when($filters->status, fn ($builder, string $status) => $builder->where('status', $status))
+            ->when($filters->status, fn ($builder, DocumentStatus $status) => $builder->where('status', $status))
             ->when($filters->tagId, fn ($builder, string $tagId) => $builder->whereHas('tags', fn ($tagQuery) => $tagQuery->where('tags.id', $tagId)))
             ->when($filters->expiryFrom, fn ($builder, string $date) => $builder->whereDate('expiry_date', '>=', $date))
             ->when($filters->expiryTo, fn ($builder, string $date) => $builder->whereDate('expiry_date', '<=', $date));
@@ -50,7 +51,7 @@ class DocumentRepository
             'category_id' => $data->categoryId,
             'title' => $data->title,
             'notes' => $data->notes,
-            'status' => $data->status ?? Document::STATUS_ACTIVE,
+            'status' => $data->status ?? DocumentStatus::Active,
             'issue_date' => $data->issueDate,
             'expiry_date' => $data->expiryDate,
             'original_filename' => $data->file->getClientOriginalName(),
@@ -73,7 +74,7 @@ class DocumentRepository
             'status' => $data->status,
             'issue_date' => $data->issueDate,
             'expiry_date' => $data->expiryDate,
-            'archived_at' => $data->status === Document::STATUS_ARCHIVED ? now() : null,
+            'archived_at' => $data->status === DocumentStatus::Archived ? now() : null,
         ]);
 
         $document->tags()->sync($data->tagIds);
@@ -89,8 +90,18 @@ class DocumentRepository
     public function archive(Document $document): Document
     {
         $document->update([
-            'status' => Document::STATUS_ARCHIVED,
+            'status' => DocumentStatus::Archived,
             'archived_at' => now(),
+        ]);
+
+        return $document;
+    }
+
+    public function restore(Document $document): Document
+    {
+        $document->update([
+            'status' => DocumentStatus::Active,
+            'archived_at' => null,
         ]);
 
         return $document;

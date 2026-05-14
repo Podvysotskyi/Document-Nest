@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\DTOs\DocumentFiltersData;
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -23,7 +24,7 @@ class IndexDocumentRequest extends FormRequest
             query: $validated['q'] ?? null,
             categoryId: $validated['category_id'] ?? null,
             tagId: $validated['tag_id'] ?? null,
-            status: $validated['status'] ?? null,
+            status: isset($validated['status']) ? DocumentStatus::from($validated['status']) : null,
             expiryFrom: $validated['expiry_from'] ?? null,
             expiryTo: $validated['expiry_to'] ?? null,
             sort: $validated['sort'] ?? 'newest',
@@ -39,11 +40,7 @@ class IndexDocumentRequest extends FormRequest
             'q' => ['nullable', 'string', 'max:255'],
             'category_id' => ['nullable', 'uuid'],
             'tag_id' => ['nullable', 'uuid'],
-            'status' => ['nullable', Rule::in([
-                Document::STATUS_ACTIVE,
-                Document::STATUS_EXPIRED,
-                Document::STATUS_ARCHIVED,
-            ])],
+            'status' => ['nullable', Rule::enum(DocumentStatus::class)],
             'expiry_from' => ['nullable', 'date'],
             'expiry_to' => ['nullable', 'date'],
             'sort' => ['nullable', Rule::in(['newest', 'oldest', 'title', 'expiry_date'])],

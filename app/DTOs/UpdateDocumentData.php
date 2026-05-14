@@ -2,6 +2,8 @@
 
 namespace App\DTOs;
 
+use App\Enums\DocumentStatus;
+
 final readonly class UpdateDocumentData
 {
     /**
@@ -14,6 +16,6 @@ final readonly class UpdateDocumentData
         public ?string $notes,
         public ?string $issueDate,
         public ?string $expiryDate,
-        public string $status,
+        public DocumentStatus $status,
     ) {}
 }

@@ -8,7 +8,9 @@ const page = usePage()
     <div class="min-h-screen bg-zinc-50 text-zinc-900">
         <header class="border-b border-zinc-200 bg-white">
             <div class="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
-                <Link href="/" class="font-semibold">Document Nest</Link>
+                <a class="font-semibold" href="/">
+                    Document Nest
+                </a>
 
                 <nav class="flex items-center gap-2 text-sm">
                     <Link class="rounded-md px-2 py-1 hover:bg-zinc-100" href="/dashboard">Dashboard</Link>

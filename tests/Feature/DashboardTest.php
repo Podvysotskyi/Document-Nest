@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -11,14 +12,14 @@ test('authenticated user can view dashboard', function () {
     Document::factory()->for($user)->create([
         'category_id' => $category->id,
         'title' => 'Recent Doc',
-        'status' => Document::STATUS_ACTIVE,
+        'status' => DocumentStatus::Active,
         'expiry_date' => null,
     ]);
 
     Document::factory()->for($user)->create([
         'category_id' => $category->id,
         'title' => 'Expiring Soon',
-        'status' => Document::STATUS_ACTIVE,
+        'status' => DocumentStatus::Active,
         'expiry_date' => now()->addDays(5)->toDateString(),
     ]);
 

@@ -2,6 +2,7 @@
 
 namespace App\DTOs;
 
+use App\Enums\DocumentStatus;
 use Illuminate\Http\UploadedFile;
 
 final readonly class StoreDocumentData
@@ -17,6 +18,6 @@ final readonly class StoreDocumentData
         public ?string $notes,
         public ?string $issueDate,
         public ?string $expiryDate,
-        public ?string $status,
+        public ?DocumentStatus $status,
     ) {}
 }

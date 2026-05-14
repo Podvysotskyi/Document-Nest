@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\Tag;
 use App\Models\User;
@@ -60,7 +61,7 @@ test('authenticated user can store a document', function () {
         'category_id' => $category->id,
         'tag_ids' => [$tag->id],
         'notes' => 'Some notes',
-        'status' => Document::STATUS_ACTIVE,
+        'status' => DocumentStatus::Active->value,
     ]);
 
     $document = Document::first();
@@ -107,12 +108,12 @@ test('authenticated user can update a document', function () {
     $response = $this->actingAs($user)->put(route('documents.update', $document), [
         'title' => 'New Title',
         'category_id' => $document->category_id,
-        'status' => Document::STATUS_ARCHIVED,
+        'status' => DocumentStatus::Archived->value,
     ]);
 
     $response->assertRedirect(route('documents.show', $document));
     expect($document->fresh()->title)->toBe('New Title');
-    expect($document->fresh()->status)->toBe(Document::STATUS_ARCHIVED);
+    expect($document->fresh()->status)->toBe(DocumentStatus::Archived);
 });
 
 test('authenticated user can delete a document', function () {
@@ -132,13 +133,27 @@ test('authenticated user can delete a document', function () {
 
 test('authenticated user can archive a document', function () {
     $user = User::factory()->create();
-    $document = Document::factory()->for($user)->create(['status' => Document::STATUS_ACTIVE]);
+    $document = Document::factory()->for($user)->create(['status' => DocumentStatus::Active]);
 
     $response = $this->actingAs($user)->post(route('documents.archive', $document));
 
     $response->assertRedirect();
-    expect($document->fresh()->status)->toBe(Document::STATUS_ARCHIVED);
+    expect($document->fresh()->status)->toBe(DocumentStatus::Archived);
     expect($document->fresh()->archived_at)->not->toBeNull();
+});
+
+test('authenticated user can restore a document', function () {
+    $user = User::factory()->create();
+    $document = Document::factory()->for($user)->create([
+        'status' => DocumentStatus::Archived,
+        'archived_at' => now(),
+    ]);
+
+    $response = $this->actingAs($user)->post(route('documents.restore', $document));
+
+    $response->assertRedirect();
+    expect($document->fresh()->status)->toBe(DocumentStatus::Active);
+    expect($document->fresh()->archived_at)->toBeNull();
 });
 
 test('authenticated user can preview a document', function () {

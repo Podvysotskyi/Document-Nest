@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\User;
 use App\Policies\DocumentPolicy;
@@ -18,7 +19,7 @@ test('document policy checks ownership for model actions', function () {
     $otherUser = User::factory()->create();
     $document = Document::factory()->for($owner)->create([
         'title' => 'Passport',
-        'status' => Document::STATUS_ACTIVE,
+        'status' => DocumentStatus::Active,
         'original_filename' => 'passport.pdf',
         'stored_path' => 'documents/passport.pdf',
         'mime_type' => 'application/pdf',

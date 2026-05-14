@@ -1,11 +1,13 @@
 <?php
 
+use App\Enums\DocumentStatus;
 use App\Http\Requests\ArchiveDocumentRequest;
 use App\Http\Requests\CreateDocumentRequest;
 use App\Http\Requests\DestroyDocumentRequest;
 use App\Http\Requests\DownloadDocumentRequest;
 use App\Http\Requests\EditDocumentRequest;
 use App\Http\Requests\PreviewDocumentRequest;
+use App\Http\Requests\RestoreDocumentRequest;
 use App\Http\Requests\ShowDocumentRequest;
 use App\Models\Document;
 use App\Models\User;
@@ -37,7 +39,7 @@ test('document action requests enforce ownership authorization', function () {
     $other = User::factory()->create();
     $document = Document::factory()->for($owner)->create([
         'title' => 'Passport',
-        'status' => Document::STATUS_ACTIVE,
+        'status' => DocumentStatus::Active,
         'original_filename' => 'passport.pdf',
         'stored_path' => 'documents/passport.pdf',
         'mime_type' => 'application/pdf',
@@ -51,6 +53,7 @@ test('document action requests enforce ownership authorization', function () {
         ArchiveDocumentRequest::class,
         PreviewDocumentRequest::class,
         DownloadDocumentRequest::class,
+        RestoreDocumentRequest::class,
     ];
 
     foreach ($requestClasses as $requestClass) {

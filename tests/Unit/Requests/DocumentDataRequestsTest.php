@@ -3,6 +3,7 @@
 use App\DTOs\DocumentFiltersData;
 use App\DTOs\StoreDocumentData;
 use App\DTOs\UpdateDocumentData;
+use App\Enums\DocumentStatus;
 use App\Http\Requests\IndexDocumentRequest;
 use App\Http\Requests\StoreDocumentRequest;
 use App\Http\Requests\UpdateDocumentRequest;
@@ -27,6 +28,7 @@ test('store document request exposes expected rules and builds dto', function ()
     expect($dto)->toBeInstanceOf(StoreDocumentData::class);
     expect($dto->title)->toBe('Passport');
     expect($dto->tagIds)->toBe(['tag-1', 'tag-2']);
+    expect($dto->status)->toBe(DocumentStatus::Active);
 });
 
 test('update document request exposes expected rules and builds dto', function () {
@@ -45,7 +47,7 @@ test('update document request exposes expected rules and builds dto', function (
 
     expect($dto)->toBeInstanceOf(UpdateDocumentData::class);
     expect($dto->title)->toBe('Passport Updated');
-    expect($dto->status)->toBe('archived');
+    expect($dto->status)->toBe(DocumentStatus::Archived);
 });
 
 test('index document request rules, authorize and dto mapping', function () {
@@ -77,6 +79,7 @@ test('index document request rules, authorize and dto mapping', function () {
     expect($dto)->toBeInstanceOf(DocumentFiltersData::class);
     expect($dto->query)->toBe('passport');
     expect($dto->sort)->toBe('title');
+    expect($dto->status)->toBe(DocumentStatus::Active);
 });
 
 test('index document request dto uses default sort when missing', function () {

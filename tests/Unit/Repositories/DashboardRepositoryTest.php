@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\User;
 use App\Repositories\DashboardRepository;
@@ -12,7 +13,7 @@ test('dashboard repository returns scoped aggregate metrics', function () {
     Document::factory()->for($user)->create([
         'category_id' => $category->id,
         'title' => 'Soon Expiring',
-        'status' => Document::STATUS_ACTIVE,
+        'status' => DocumentStatus::Active,
         'expiry_date' => now()->addDays(5)->toDateString(),
         'original_filename' => 'a.pdf',
         'stored_path' => 'documents/a.pdf',
@@ -21,7 +22,7 @@ test('dashboard repository returns scoped aggregate metrics', function () {
     ]);
     Document::factory()->for($user)->create([
         'title' => 'Missing Expiry',
-        'status' => Document::STATUS_ACTIVE,
+        'status' => DocumentStatus::Active,
         'expiry_date' => null,
         'original_filename' => 'b.pdf',
         'stored_path' => 'documents/b.pdf',
@@ -30,7 +31,7 @@ test('dashboard repository returns scoped aggregate metrics', function () {
     ]);
     Document::factory()->for($otherUser)->create([
         'title' => 'Other User',
-        'status' => Document::STATUS_ACTIVE,
+        'status' => DocumentStatus::Active,
         'original_filename' => 'x.pdf',
         'stored_path' => 'documents/x.pdf',
         'mime_type' => 'application/pdf',

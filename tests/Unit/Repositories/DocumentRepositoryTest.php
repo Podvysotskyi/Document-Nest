@@ -3,6 +3,7 @@
 use App\DTOs\DocumentFiltersData;
 use App\DTOs\StoreDocumentData;
 use App\DTOs\UpdateDocumentData;
+use App\Enums\DocumentStatus;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\Tag;
@@ -20,7 +21,7 @@ test('document repository paginates user-owned documents with filters', function
     $matchingDocument = Document::factory()->for($user)->create([
         'category_id' => $category->id,
         'title' => 'Doc A',
-        'status' => Document::STATUS_ACTIVE,
+        'status' => DocumentStatus::Active,
         'expiry_date' => now()->addDays(10)->toDateString(),
         'original_filename' => 'a.pdf',
         'stored_path' => 'documents/a.pdf',
@@ -31,7 +32,7 @@ test('document repository paginates user-owned documents with filters', function
 
     Document::factory()->for($otherUser)->create([
         'title' => 'Other User Doc',
-        'status' => Document::STATUS_ACTIVE,
+        'status' => DocumentStatus::Active,
         'original_filename' => 'x.pdf',
         'stored_path' => 'documents/x.pdf',
         'mime_type' => 'application/pdf',
@@ -42,7 +43,7 @@ test('document repository paginates user-owned documents with filters', function
         query: null,
         categoryId: $category->id,
         tagId: $tag->id,
-        status: Document::STATUS_ACTIVE,
+        status: DocumentStatus::Active,
         expiryFrom: now()->toDateString(),
         expiryTo: now()->addDays(30)->toDateString(),
         sort: 'newest',
@@ -71,7 +72,7 @@ test('document repository can create update archive and delete a document', func
         notes: 'Important',
         issueDate: now()->subYear()->toDateString(),
         expiryDate: now()->addYear()->toDateString(),
-        status: Document::STATUS_ACTIVE,
+        status: DocumentStatus::Active,
     ));
 
     expect($document->exists)->toBeTrue();
@@ -84,12 +85,12 @@ test('document repository can create update archive and delete a document', func
         notes: 'Updated notes',
         issueDate: now()->subYear()->toDateString(),
         expiryDate: now()->addYears(2)->toDateString(),
-        status: Document::STATUS_ARCHIVED,
+        status: DocumentStatus::Archived,
     ));
 
     $document->refresh();
     expect($document->title)->toBe('Passport Updated');
-    expect($document->status)->toBe(Document::STATUS_ARCHIVED);
+    expect($document->status)->toBe(DocumentStatus::Archived);
     expect($document->archived_at)->not->toBeNull();
     expect($document->tags()->count())->toBe(0);
 
@@ -122,8 +123,13 @@ test('document repository load and stream helpers work', function () {
 
     $repository->archive($document);
     $document->refresh();
-    expect($document->status)->toBe(Document::STATUS_ARCHIVED);
+    expect($document->status)->toBe(DocumentStatus::Archived);
     expect($document->archived_at)->not->toBeNull();
+
+    $repository->restore($document);
+    $document->refresh();
+    expect($document->status)->toBe(DocumentStatus::Active);
+    expect($document->archived_at)->toBeNull();
 
     $previewResponse = $repository->streamPreview($document);
     $downloadResponse = $repository->streamDownload($document);

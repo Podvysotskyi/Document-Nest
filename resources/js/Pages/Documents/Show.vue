@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3'
+import {Head, Link, router} from '@inertiajs/vue3'
 import AppLayout from '../../Layouts/AppLayout.vue'
 
 const props = defineProps({
@@ -10,6 +10,10 @@ const props = defineProps({
 
 const archive = () => {
     router.post(`/documents/${props.document.id}/archive`)
+}
+
+const restore = () => {
+    router.post(`/documents/${props.document.id}/restore`)
 }
 </script>
 
@@ -24,7 +28,14 @@ const archive = () => {
                     <Link :href="`/documents/${document.id}/edit`" class="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100">
                         Edit
                     </Link>
-                    <button type="button" class="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100" @click="archive">
+                    <button v-if="document.status === 'archived'" class="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
+                            type="button"
+                            @click="restore">
+                        Restore
+                    </button>
+                    <button v-else class="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-100"
+                            type="button"
+                            @click="archive">
                         Archive
                     </button>
                     <a :href="downloadUrl" class="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white">Download</a>
