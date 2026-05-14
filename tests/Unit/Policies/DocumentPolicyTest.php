@@ -1,40 +1,48 @@
 <?php
 
+namespace Tests\Unit\Policies;
+
 use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\User;
 use App\Policies\DocumentPolicy;
+use Tests\TestCase;
 
-test('document policy allows viewAny and create for authenticated user', function () {
-    $policy = new DocumentPolicy;
-    $user = User::factory()->create();
+class DocumentPolicyTest extends TestCase
+{
+    public function test_document_policy_allows_view_any_and_create_for_authenticated_user(): void
+    {
+        $policy = new DocumentPolicy;
+        $user = User::factory()->create();
 
-    expect($policy->viewAny($user))->toBeTrue();
-    expect($policy->create($user))->toBeTrue();
-});
+        $this->assertTrue($policy->viewAny($user));
+        $this->assertTrue($policy->create($user));
+    }
 
-test('document policy checks ownership for model actions', function () {
-    $policy = new DocumentPolicy;
-    $owner = User::factory()->create();
-    $otherUser = User::factory()->create();
-    $document = Document::factory()->for($owner)->create([
-        'title' => 'Passport',
-        'status' => DocumentStatus::Active,
-        'original_filename' => 'passport.pdf',
-        'stored_path' => 'documents/passport.pdf',
-        'mime_type' => 'application/pdf',
-        'file_size' => 1000,
-    ]);
+    public function test_document_policy_checks_ownership_for_model_actions(): void
+    {
+        $policy = new DocumentPolicy;
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $document = Document::factory()->for($owner)->create([
+            'title' => 'Passport',
+            'status' => DocumentStatus::Active,
+            'original_filename' => 'passport.pdf',
+            'stored_path' => 'documents/passport.pdf',
+            'mime_type' => 'application/pdf',
+            'file_size' => 1000,
+        ]);
 
-    expect($policy->view($owner, $document))->toBeTrue();
-    expect($policy->update($owner, $document))->toBeTrue();
-    expect($policy->delete($owner, $document))->toBeTrue();
-    expect($policy->restore($owner, $document))->toBeTrue();
-    expect($policy->forceDelete($owner, $document))->toBeTrue();
+        $this->assertTrue($policy->view($owner, $document));
+        $this->assertTrue($policy->update($owner, $document));
+        $this->assertTrue($policy->delete($owner, $document));
+        $this->assertTrue($policy->restore($owner, $document));
+        $this->assertTrue($policy->forceDelete($owner, $document));
 
-    expect($policy->view($otherUser, $document))->toBeFalse();
-    expect($policy->update($otherUser, $document))->toBeFalse();
-    expect($policy->delete($otherUser, $document))->toBeFalse();
-    expect($policy->restore($otherUser, $document))->toBeFalse();
-    expect($policy->forceDelete($otherUser, $document))->toBeFalse();
-});
+        $this->assertFalse($policy->view($otherUser, $document));
+        $this->assertFalse($policy->update($otherUser, $document));
+        $this->assertFalse($policy->delete($otherUser, $document));
+        $this->assertFalse($policy->restore($otherUser, $document));
+        $this->assertFalse($policy->forceDelete($otherUser, $document));
+    }
+}

@@ -22,8 +22,8 @@ class DocumentDetailResource extends JsonResource
             'original_filename' => $this->original_filename,
             'mime_type' => $this->mime_type,
             'file_size' => $this->file_size,
-            'category' => $this->whenLoaded('category', fn () => CategoryResource::make($this->category)),
-            'tags' => $this->whenLoaded('tags', fn () => TagResource::collection($this->tags)),
+            'category' => $this->whenLoaded('category', fn () => CategoryResource::make($this->category)->resolve($request)),
+            'tags' => $this->whenLoaded('tags', fn () => TagResource::collection($this->tags)->resolve($request), []),
         ];
     }
 }

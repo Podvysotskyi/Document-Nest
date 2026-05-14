@@ -7,6 +7,7 @@ use App\Enums\DocumentStatus;
 use App\Models\Document;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class IndexDocumentRequest extends FormRequest
@@ -20,10 +21,12 @@ class IndexDocumentRequest extends FormRequest
     {
         $validated = $this->validated();
         $sort = $validated['sort'] ?? 'newest';
+        $categoryFilter = $validated['category_id'] ?? null;
 
         return new DocumentFiltersData(
             query: $validated['q'] ?? null,
-            categoryId: $validated['category_id'] ?? null,
+            categoryId: $categoryFilter === 'uncategorized' ? null : $categoryFilter,
+            uncategorizedOnly: $categoryFilter === 'uncategorized',
             tagId: $validated['tag_id'] ?? null,
             status: isset($validated['status']) ? DocumentStatus::from($validated['status']) : null,
             expiryFrom: $validated['expiry_from'] ?? null,
@@ -40,7 +43,15 @@ class IndexDocumentRequest extends FormRequest
     {
         return [
             'q' => ['nullable', 'string', 'max:255'],
-            'category_id' => ['nullable', 'uuid'],
+            'category_id' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($value !== 'uncategorized' && ! Str::isUuid($value)) {
+                        $fail('The selected category is invalid.');
+                    }
+                },
+            ],
             'tag_id' => ['nullable', 'uuid'],
             'status' => ['nullable', Rule::enum(DocumentStatus::class)],
             'expiry_from' => ['nullable', 'date'],

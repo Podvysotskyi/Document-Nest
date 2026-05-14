@@ -112,12 +112,13 @@ const restore = () => {
                         </p>
                     </Card>
 
-                    <Card v-if="document.tags?.length" title="Tags">
-                        <div class="flex flex-wrap gap-2">
+                    <Card title="Tags">
+                        <div v-if="document.tags?.length" class="flex flex-wrap gap-2">
                             <Badge v-for="tag in document.tags" :key="tag.id" variant="info">
                                 {{ tag.name }}
                             </Badge>
                         </div>
+                        <p v-else class="text-sm text-zinc-500">No tags assigned.</p>
                     </Card>
                 </div>
             </div>

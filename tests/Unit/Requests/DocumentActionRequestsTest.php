@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Unit\Requests;
+
 use App\Enums\DocumentStatus;
 use App\Http\Requests\ArchiveDocumentRequest;
 use App\Http\Requests\CreateDocumentRequest;
@@ -11,60 +13,66 @@ use App\Http\Requests\RestoreDocumentRequest;
 use App\Http\Requests\ShowDocumentRequest;
 use App\Models\Document;
 use App\Models\User;
+use Tests\TestCase;
 
-function bindDocumentRoute(object $request, Document $document): void
+class DocumentActionRequestsTest extends TestCase
 {
-    $request->setRouteResolver(fn () => new class($document)
+    public function test_create_document_request_authorize_uses_policy(): void
     {
-        public function __construct(private Document $document) {}
+        $user = User::factory()->create();
+        $request = new CreateDocumentRequest;
+        $request->setUserResolver(fn () => $user);
 
-        public function parameter(string $name, mixed $default = null): mixed
-        {
-            return $name === 'document' ? $this->document : $default;
-        }
-    });
-}
-
-test('create document request authorize uses policy', function () {
-    $user = User::factory()->create();
-    $request = new CreateDocumentRequest;
-    $request->setUserResolver(fn () => $user);
-
-    expect($request->authorize())->toBeTrue();
-    expect($request->rules())->toBeArray();
-});
-
-test('document action requests enforce ownership authorization', function () {
-    $owner = User::factory()->create();
-    $other = User::factory()->create();
-    $document = Document::factory()->for($owner)->create([
-        'title' => 'Passport',
-        'status' => DocumentStatus::Active,
-        'original_filename' => 'passport.pdf',
-        'stored_path' => 'documents/passport.pdf',
-        'mime_type' => 'application/pdf',
-        'file_size' => 1000,
-    ]);
-
-    $requestClasses = [
-        ShowDocumentRequest::class,
-        EditDocumentRequest::class,
-        DestroyDocumentRequest::class,
-        ArchiveDocumentRequest::class,
-        PreviewDocumentRequest::class,
-        DownloadDocumentRequest::class,
-        RestoreDocumentRequest::class,
-    ];
-
-    foreach ($requestClasses as $requestClass) {
-        $ownerRequest = new $requestClass;
-        $ownerRequest->setUserResolver(fn () => $owner);
-        bindDocumentRoute($ownerRequest, $document);
-        expect($ownerRequest->authorize())->toBeTrue();
-
-        $otherRequest = new $requestClass;
-        $otherRequest->setUserResolver(fn () => $other);
-        bindDocumentRoute($otherRequest, $document);
-        expect($otherRequest->authorize())->toBeFalse();
+        $this->assertTrue($request->authorize());
+        $this->assertIsArray($request->rules());
     }
-});
+
+    public function test_document_action_requests_enforce_ownership_authorization(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $document = Document::factory()->for($owner)->create([
+            'title' => 'Passport',
+            'status' => DocumentStatus::Active,
+            'original_filename' => 'passport.pdf',
+            'stored_path' => 'documents/passport.pdf',
+            'mime_type' => 'application/pdf',
+            'file_size' => 1000,
+        ]);
+
+        $requestClasses = [
+            ShowDocumentRequest::class,
+            EditDocumentRequest::class,
+            DestroyDocumentRequest::class,
+            ArchiveDocumentRequest::class,
+            PreviewDocumentRequest::class,
+            DownloadDocumentRequest::class,
+            RestoreDocumentRequest::class,
+        ];
+
+        foreach ($requestClasses as $requestClass) {
+            $ownerRequest = new $requestClass;
+            $ownerRequest->setUserResolver(fn () => $owner);
+            $this->bindDocumentRoute($ownerRequest, $document);
+            $this->assertTrue($ownerRequest->authorize());
+
+            $otherRequest = new $requestClass;
+            $otherRequest->setUserResolver(fn () => $other);
+            $this->bindDocumentRoute($otherRequest, $document);
+            $this->assertFalse($otherRequest->authorize());
+        }
+    }
+
+    private function bindDocumentRoute(object $request, Document $document): void
+    {
+        $request->setRouteResolver(fn () => new class($document)
+        {
+            public function __construct(private Document $document) {}
+
+            public function parameter(string $name, mixed $default = null): mixed
+            {
+                return $name === 'document' ? $this->document : $default;
+            }
+        });
+    }
+}

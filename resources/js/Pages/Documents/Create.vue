@@ -106,6 +106,29 @@ const submit = () => {
                     </div>
                 </Card>
 
+                <Card title="Tags">
+                    <div v-if="tags.length" class="grid gap-2 sm:grid-cols-2">
+                        <label
+                            v-for="tag in tags"
+                            :key="tag.id"
+                            class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm transition-colors hover:bg-zinc-50"
+                        >
+                            <input
+                                v-model="form.tag_ids"
+                                :value="tag.id"
+                                class="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                                type="checkbox"
+                            >
+                            <span class="min-w-0 truncate font-medium text-zinc-800">{{ tag.name }}</span>
+                        </label>
+                    </div>
+                    <p v-else class="text-sm text-zinc-500">No tags yet.</p>
+                    <p v-if="form.errors.tag_ids" class="mt-2 text-sm text-red-600">{{ form.errors.tag_ids }}</p>
+                    <p v-if="form.errors['tag_ids.0']" class="mt-2 text-sm text-red-600">
+                        {{ form.errors['tag_ids.0'] }}
+                    </p>
+                </Card>
+
                 <div class="flex items-center justify-end gap-3">
                     <Button href="/documents" variant="secondary">Cancel</Button>
                     <Button :disabled="form.processing" type="submit">

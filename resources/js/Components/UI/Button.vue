@@ -1,6 +1,12 @@
 <script setup>
 import {Link} from '@inertiajs/vue3'
-import {computed} from 'vue'
+import {computed, useAttrs} from 'vue'
+
+defineOptions({
+    inheritAttrs: false,
+})
+
+const attrs = useAttrs()
 
 const props = defineProps({
     href: String,
@@ -44,10 +50,11 @@ const classes = computed(() => {
 </script>
 
 <template>
-    <Link v-if="href" :as="as" :class="classes" :disabled="disabled" :href="href" :method="method">
+    <Link v-if="href" :as="as" :class="[classes, attrs.class]" :disabled="disabled" :href="href" :method="method"
+          v-bind="attrs">
         <slot/>
     </Link>
-    <button v-else :class="classes" :disabled="disabled" :type="type">
+    <button v-else :class="[classes, attrs.class]" :disabled="disabled" :type="type" v-bind="attrs">
         <slot/>
     </button>
 </template>

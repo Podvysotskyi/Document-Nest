@@ -1,49 +1,58 @@
 <?php
 
+namespace Tests\Unit\Policies;
+
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\User;
 use App\Policies\CategoryPolicy;
+use Tests\TestCase;
 
-test('category policy allows viewAny and create for authenticated user', function () {
-    $policy = new CategoryPolicy;
-    $user = User::factory()->create();
+class CategoryPolicyTest extends TestCase
+{
+    public function test_category_policy_allows_view_any_and_create_for_authenticated_user(): void
+    {
+        $policy = new CategoryPolicy;
+        $user = User::factory()->create();
 
-    expect($policy->viewAny($user))->toBeTrue();
-    expect($policy->create($user))->toBeTrue();
-});
+        $this->assertTrue($policy->viewAny($user));
+        $this->assertTrue($policy->create($user));
+    }
 
-test('category policy checks ownership for model actions', function () {
-    $policy = new CategoryPolicy;
-    $owner = User::factory()->create();
-    $otherUser = User::factory()->create();
-    $category = Category::factory()->for($owner)->create([
-        'name' => 'FinanceX',
-        'slug' => 'finance-x',
-    ]);
+    public function test_category_policy_checks_ownership_for_model_actions(): void
+    {
+        $policy = new CategoryPolicy;
+        $owner = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $category = Category::factory()->for($owner)->create([
+            'name' => 'FinanceX',
+            'slug' => 'finance-x',
+        ]);
 
-    expect($policy->view($owner, $category))->toBeTrue();
-    expect($policy->update($owner, $category))->toBeTrue();
-    expect($policy->delete($owner, $category))->toBeTrue();
-    expect($policy->restore($owner, $category))->toBeTrue();
-    expect($policy->forceDelete($owner, $category))->toBeTrue();
+        $this->assertTrue($policy->view($owner, $category));
+        $this->assertTrue($policy->update($owner, $category));
+        $this->assertTrue($policy->delete($owner, $category));
+        $this->assertTrue($policy->restore($owner, $category));
+        $this->assertTrue($policy->forceDelete($owner, $category));
 
-    expect($policy->view($otherUser, $category))->toBeFalse();
-    expect($policy->update($otherUser, $category))->toBeFalse();
-    expect($policy->delete($otherUser, $category))->toBeFalse();
-    expect($policy->restore($otherUser, $category))->toBeFalse();
-    expect($policy->forceDelete($otherUser, $category))->toBeFalse();
-});
+        $this->assertFalse($policy->view($otherUser, $category));
+        $this->assertFalse($policy->update($otherUser, $category));
+        $this->assertFalse($policy->delete($otherUser, $category));
+        $this->assertFalse($policy->restore($otherUser, $category));
+        $this->assertFalse($policy->forceDelete($otherUser, $category));
+    }
 
-test('category policy denies delete when category has documents', function () {
-    $policy = new CategoryPolicy;
-    $owner = User::factory()->create();
-    $category = Category::factory()->for($owner)->create([
-        'name' => 'FinanceX',
-        'slug' => 'finance-x',
-    ]);
+    public function test_category_policy_denies_delete_when_category_has_documents(): void
+    {
+        $policy = new CategoryPolicy;
+        $owner = User::factory()->create();
+        $category = Category::factory()->for($owner)->create([
+            'name' => 'FinanceX',
+            'slug' => 'finance-x',
+        ]);
 
-    Document::factory()->for($owner)->for($category)->create();
+        Document::factory()->for($owner)->for($category)->create();
 
-    expect($policy->delete($owner, $category))->toBeFalse();
-});
+        $this->assertFalse($policy->delete($owner, $category));
+    }
+}

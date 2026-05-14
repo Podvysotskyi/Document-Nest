@@ -20,10 +20,20 @@ const props = defineProps({
 const form = useForm({
     q: props.filters.q || '',
     category_id: props.filters.category_id || '',
+    tag_id: props.filters.tag_id || '',
     status: props.filters.status || '',
+    expiry_from: props.filters.expiry_from || '',
+    expiry_to: props.filters.expiry_to || '',
     sort: props.filters.sort || 'newest',
     direction: props.filters.direction || '',
 })
+
+const categoryOptions = [
+    {value: 'uncategorized', label: 'Uncategorized'},
+    ...props.categories.map((category) => ({value: category.id, label: category.name})),
+]
+
+const tagOptions = props.tags.map((tag) => ({value: tag.id, label: tag.name}))
 
 const sortBy = (field) => {
     if (form.sort === field) {
@@ -56,7 +66,7 @@ const applyFilters = () => {
 
 watch(
     () => form.data(),
-    debounce((data) => {
+    debounce(() => {
         applyFilters()
     }, 300),
     {deep: true}
@@ -68,43 +78,69 @@ watch(
 
     <AppLayout>
         <div class="space-y-6">
-            <header class="flex items-center justify-between">
+            <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight text-zinc-900">Documents</h1>
                     <p class="mt-1 text-sm text-zinc-500">Manage and filter your document collection.</p>
                 </div>
-                <Button href="/documents/create">
+                <Button class="w-full sm:w-auto" href="/documents/create">
                     <CloudArrowUpIcon class="mr-2 h-5 w-5"/>
                     Upload Document
                 </Button>
             </header>
 
             <Card padding="px-4 py-3">
-                <form class="flex flex-wrap items-center gap-3" @submit.prevent="applyFilters">
-                    <div class="min-w-[240px] flex-1">
-                        <Input v-model="form.q" placeholder="Search documents..."/>
+                <form class="grid gap-3 md:grid-cols-2 xl:grid-cols-7" @submit.prevent>
+                    <div class="md:col-span-2 xl:col-span-2">
+                        <Input
+                            v-model="form.q"
+                            :error="form.errors.q"
+                            label="Search"
+                            placeholder="Search documents..."
+                        />
                     </div>
                     <Select
                         v-model="form.category_id"
-                        :options="categories.map(c => ({ value: c.id, label: c.name }))"
-                        class="min-w-[160px]"
+                        :error="form.errors.category_id"
+                        :options="categoryOptions"
+                        label="Category"
                         placeholder="All categories"
                     />
                     <Select
+                        v-model="form.tag_id"
+                        :error="form.errors.tag_id"
+                        :options="tagOptions"
+                        label="Tag"
+                        placeholder="All tags"
+                    />
+                    <Select
                         v-model="form.status"
+                        :error="form.errors.status"
                         :options="[
                             { value: 'active', label: 'Active' },
                             { value: 'expired', label: 'Expired' },
                             { value: 'archived', label: 'Archived' }
                         ]"
-                        class="min-w-[140px]"
+                        label="Status"
                         placeholder="All statuses"
+                    />
+                    <Input
+                        v-model="form.expiry_from"
+                        :error="form.errors.expiry_from"
+                        label="Expiry from"
+                        type="date"
+                    />
+                    <Input
+                        v-model="form.expiry_to"
+                        :error="form.errors.expiry_to"
+                        label="Expiry to"
+                        type="date"
                     />
                 </form>
             </Card>
 
             <Card padding="p-0">
-                <div class="overflow-x-auto">
+                <div :class="['overflow-x-auto transition-opacity', form.processing ? 'opacity-60' : 'opacity-100']">
                     <table class="w-full text-left text-sm text-zinc-900">
                         <thead class="bg-zinc-50/50 text-xs font-semibold uppercase tracking-wider text-zinc-500">
                         <tr>

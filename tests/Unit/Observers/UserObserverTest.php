@@ -1,20 +1,27 @@
 <?php
 
+namespace Tests\Unit\Observers;
+
 use App\Models\User;
+use Tests\TestCase;
 
-test('user observer creates default categories on user creation', function () {
-    $user = User::factory()->create();
+class UserObserverTest extends TestCase
+{
+    public function test_user_observer_creates_default_categories_on_user_creation(): void
+    {
+        $user = User::factory()->create();
 
-    expect($user->categories()->count())->toBe(9);
-    expect($user->categories()->pluck('name')->all())->toEqualCanonicalizing([
-        'Finance',
-        'Health',
-        'Identity',
-        'Home',
-        'Vehicle',
-        'Work',
-        'Education',
-        'Legal',
-        'Other',
-    ]);
-});
+        $this->assertSame(9, $user->categories()->count());
+        $this->assertEqualsCanonicalizing([
+            'Finance',
+            'Health',
+            'Identity',
+            'Home',
+            'Vehicle',
+            'Work',
+            'Education',
+            'Legal',
+            'Other',
+        ], $user->categories()->pluck('name')->all());
+    }
+}

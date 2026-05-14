@@ -1,29 +1,37 @@
 <?php
 
+namespace Tests\Browser;
+
 use App\Models\User;
 use Laravel\Dusk\Browser;
+use Tests\DuskTestCase;
 
-test('guest can see landing page and login page', function () {
-    $this->browse(function (Browser $browser) {
-        $browser->visit('/')
-            ->assertSee('Document Nest')
-            ->assertSee('Securely organize your important life documents')
-            ->assertSee('Sign in to get started')
-            ->clickLink('Sign in to get started')
-            ->assertPathIs('/login')
-            ->assertSee('Sign in to your account')
-            ->assertSee('Continue with Google');
-    });
-});
+class AuthenticationBrowserTest extends DuskTestCase
+{
+    public function test_guest_can_see_landing_page_and_login_page(): void
+    {
+        $this->browse(function (Browser $browser): void {
+            $browser->visit('/')
+                ->assertSee('Document Nest')
+                ->assertSee('Securely organize your important life documents')
+                ->assertSee('Sign in to get started')
+                ->clickLink('Sign in to get started')
+                ->assertPathIs('/login')
+                ->assertSee('Sign in to your account')
+                ->assertSee('Continue with Google');
+        });
+    }
 
-test('authenticated user sees dashboard link on landing page and is redirected from login', function () {
-    $user = User::factory()->create();
+    public function test_authenticated_user_sees_dashboard_link_on_landing_page_and_is_redirected_from_login(): void
+    {
+        $user = User::factory()->create();
 
-    $this->browse(function (Browser $browser) use ($user) {
-        $browser->loginAs($user)
-            ->visit('/')
-            ->assertSee('Go to Dashboard')
-            ->visit('/login')
-            ->assertPathIs('/dashboard');
-    });
-});
+        $this->browse(function (Browser $browser) use ($user): void {
+            $browser->loginAs($user)
+                ->visit('/')
+                ->assertSee('Go to Dashboard')
+                ->visit('/login')
+                ->assertPathIs('/dashboard');
+        });
+    }
+}

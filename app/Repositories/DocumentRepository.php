@@ -27,6 +27,7 @@ class DocumentRepository
                         ->orWhere('documents.original_filename', $like, "%{$search}%");
                 });
             })
+            ->when($filters->uncategorizedOnly, fn ($builder) => $builder->whereNull('documents.category_id'))
             ->when($filters->categoryId, fn ($builder, string $id) => $builder->where('documents.category_id', $id))
             ->when($filters->status, fn ($builder, DocumentStatus $status) => $builder->where('documents.status', $status))
             ->when($filters->tagId, fn ($builder, string $tagId) => $builder->whereHas('tags', fn ($tagQuery) => $tagQuery->where('tags.id', $tagId)))

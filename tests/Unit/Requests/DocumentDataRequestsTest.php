@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Unit\Requests;
+
 use App\DTOs\DocumentFiltersData;
 use App\DTOs\StoreDocumentData;
 use App\DTOs\UpdateDocumentData;
@@ -9,86 +11,111 @@ use App\Http\Requests\StoreDocumentRequest;
 use App\Http\Requests\UpdateDocumentRequest;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Mockery;
+use Tests\TestCase;
 
-test('store document request exposes expected rules and builds dto', function () {
-    $request = Mockery::mock(StoreDocumentRequest::class)->makePartial();
-    $request->shouldReceive('validated')->andReturn([
-        'file' => UploadedFile::fake()->create('passport.pdf', 20, 'application/pdf'),
-        'title' => 'Passport',
-        'category_id' => 'category-id',
-        'tag_ids' => ['tag-1', 'tag-2'],
-        'notes' => 'notes',
-        'issue_date' => '2024-01-01',
-        'expiry_date' => '2028-01-01',
-        'status' => 'active',
-    ]);
+class DocumentDataRequestsTest extends TestCase
+{
+    public function test_store_document_request_exposes_expected_rules_and_builds_dto(): void
+    {
+        $request = Mockery::mock(StoreDocumentRequest::class)->makePartial();
+        $request->shouldReceive('validated')->andReturn([
+            'file' => UploadedFile::fake()->create('passport.pdf', 20, 'application/pdf'),
+            'title' => 'Passport',
+            'category_id' => 'category-id',
+            'tag_ids' => ['tag-1', 'tag-2'],
+            'notes' => 'notes',
+            'issue_date' => '2024-01-01',
+            'expiry_date' => '2028-01-01',
+            'status' => 'active',
+        ]);
 
-    $dto = $request->toDto();
+        $dto = $request->toDto();
 
-    expect($dto)->toBeInstanceOf(StoreDocumentData::class);
-    expect($dto->title)->toBe('Passport');
-    expect($dto->tagIds)->toBe(['tag-1', 'tag-2']);
-    expect($dto->status)->toBe(DocumentStatus::Active);
-});
+        $this->assertInstanceOf(StoreDocumentData::class, $dto);
+        $this->assertSame('Passport', $dto->title);
+        $this->assertSame(['tag-1', 'tag-2'], $dto->tagIds);
+        $this->assertSame(DocumentStatus::Active, $dto->status);
+    }
 
-test('update document request exposes expected rules and builds dto', function () {
-    $request = Mockery::mock(UpdateDocumentRequest::class)->makePartial();
-    $request->shouldReceive('validated')->andReturn([
-        'title' => 'Passport Updated',
-        'category_id' => 'category-id',
-        'tag_ids' => ['tag-1'],
-        'notes' => 'notes',
-        'issue_date' => '2024-01-01',
-        'expiry_date' => '2029-01-01',
-        'status' => 'archived',
-    ]);
+    public function test_update_document_request_exposes_expected_rules_and_builds_dto(): void
+    {
+        $request = Mockery::mock(UpdateDocumentRequest::class)->makePartial();
+        $request->shouldReceive('validated')->andReturn([
+            'title' => 'Passport Updated',
+            'category_id' => 'category-id',
+            'tag_ids' => ['tag-1'],
+            'notes' => 'notes',
+            'issue_date' => '2024-01-01',
+            'expiry_date' => '2029-01-01',
+            'status' => 'archived',
+        ]);
 
-    $dto = $request->toDto();
+        $dto = $request->toDto();
 
-    expect($dto)->toBeInstanceOf(UpdateDocumentData::class);
-    expect($dto->title)->toBe('Passport Updated');
-    expect($dto->status)->toBe(DocumentStatus::Archived);
-});
+        $this->assertInstanceOf(UpdateDocumentData::class, $dto);
+        $this->assertSame('Passport Updated', $dto->title);
+        $this->assertSame(DocumentStatus::Archived, $dto->status);
+    }
 
-test('index document request rules, authorize and dto mapping', function () {
-    $user = User::factory()->create();
-    $request = Mockery::mock(IndexDocumentRequest::class)->makePartial();
-    $request->setUserResolver(fn () => $user);
-    $request->shouldReceive('validated')->andReturn([
-        'q' => 'passport',
-        'category_id' => 'category-id',
-        'tag_id' => 'tag-id',
-        'status' => 'active',
-        'expiry_from' => '2025-01-01',
-        'expiry_to' => '2026-01-01',
-        'sort' => 'title',
-    ]);
+    public function test_index_document_request_rules_authorize_and_dto_mapping(): void
+    {
+        $user = User::factory()->create();
+        $request = Mockery::mock(IndexDocumentRequest::class)->makePartial();
+        $request->setUserResolver(fn () => $user);
+        $request->shouldReceive('validated')->andReturn([
+            'q' => 'passport',
+            'category_id' => 'category-id',
+            'tag_id' => 'tag-id',
+            'status' => 'active',
+            'expiry_from' => '2025-01-01',
+            'expiry_to' => '2026-01-01',
+            'sort' => 'title',
+        ]);
 
-    expect($request->authorize())->toBeTrue();
-    expect($request->rules())->toHaveKeys([
-        'q',
-        'category_id',
-        'tag_id',
-        'status',
-        'expiry_from',
-        'expiry_to',
-        'sort',
-    ]);
+        $this->assertTrue($request->authorize());
 
-    $dto = $request->toDto();
-    expect($dto)->toBeInstanceOf(DocumentFiltersData::class);
-    expect($dto->query)->toBe('passport');
-    expect($dto->sort)->toBe('title');
-    expect($dto->status)->toBe(DocumentStatus::Active);
-});
+        foreach ([
+            'q',
+            'category_id',
+            'tag_id',
+            'status',
+            'expiry_from',
+            'expiry_to',
+            'sort',
+        ] as $rule) {
+            $this->assertArrayHasKey($rule, $request->rules());
+        }
 
-test('index document request dto uses default sort when missing', function () {
-    $request = Mockery::mock(IndexDocumentRequest::class)->makePartial();
-    $request->shouldReceive('validated')->andReturn([
-        'q' => null,
-    ]);
+        $dto = $request->toDto();
+        $this->assertInstanceOf(DocumentFiltersData::class, $dto);
+        $this->assertSame('passport', $dto->query);
+        $this->assertSame('title', $dto->sort);
+        $this->assertSame(DocumentStatus::Active, $dto->status);
+    }
 
-    $dto = $request->toDto();
+    public function test_index_document_request_dto_uses_default_sort_when_missing(): void
+    {
+        $request = Mockery::mock(IndexDocumentRequest::class)->makePartial();
+        $request->shouldReceive('validated')->andReturn([
+            'q' => null,
+        ]);
 
-    expect($dto->sort)->toBe('newest');
-});
+        $dto = $request->toDto();
+
+        $this->assertSame('newest', $dto->sort);
+    }
+
+    public function test_index_document_request_maps_uncategorized_category_filter(): void
+    {
+        $request = Mockery::mock(IndexDocumentRequest::class)->makePartial();
+        $request->shouldReceive('validated')->andReturn([
+            'category_id' => 'uncategorized',
+        ]);
+
+        $dto = $request->toDto();
+
+        $this->assertNull($dto->categoryId);
+        $this->assertTrue($dto->uncategorizedOnly);
+    }
+}
