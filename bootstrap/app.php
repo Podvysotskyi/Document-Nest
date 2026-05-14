@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        Inertia::disableSsr(fn () => app()->runningUnitTests());
+        Inertia::disableSsr();
 
         Inertia::handleExceptionsUsing(function (ExceptionResponse $response) {
             if (in_array($response->statusCode(), [403, 404, 500, 503])) {

@@ -1,0 +1,70 @@
+{
+    "admin": {
+        "disabled": true
+    },
+    "logging": {
+        "logs": {
+            "default": {
+                "level": "INFO"
+            }
+        }
+    },
+    "apps": {
+        "frankenphp": {
+            "locate": {
+                "root": "/var/www/html/public"
+            },
+            "php_ini": {
+                "upload_max_filesize": "20M",
+                "post_max_size": "20M"
+            }
+        },
+        "http": {
+            "servers": {
+                "srv0": {
+                    "listen": [
+                        ":80"
+                    ],
+                    "routes": [
+                        {
+                            "handle": [
+                                {
+                                    "handler": "vars",
+                                    "root": "/var/www/html/public"
+                                },
+                                {
+                                    "handler": "request_body",
+                                    "max_size": 20971520
+                                },
+                                {
+                                    "handler": "frankenphp",
+                                    "root": "/var/www/html/public",
+                                    "env": {
+                                        "SERVER_SOFTWARE": "FrankenPHP"
+                                    }
+                                },
+                                {
+                                    "handler": "static_response",
+                                    "headers": {
+                                        "X-Frame-Options": [
+                                            "SAMEORIGIN"
+                                        ],
+                                        "X-Content-Type-Options": [
+                                            "nosniff"
+                                        ]
+                                    }
+                                },
+                                {
+                                    "handler": "file_server",
+                                    "hide": [
+                                        "/var/www/html/public/index.php"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
