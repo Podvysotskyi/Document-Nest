@@ -44,7 +44,11 @@ class CategoryPolicy
      */
     public function delete(User $user, Category $category): bool
     {
-        return $user->id === $category->user_id;
+        if ($user->id !== $category->user_id) {
+            return false;
+        }
+
+        return ! $category->documents()->exists();
     }
 
     /**

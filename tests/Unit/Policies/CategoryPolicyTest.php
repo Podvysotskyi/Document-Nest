@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Document;
 use App\Models\User;
 use App\Policies\CategoryPolicy;
 
@@ -32,4 +33,17 @@ test('category policy checks ownership for model actions', function () {
     expect($policy->delete($otherUser, $category))->toBeFalse();
     expect($policy->restore($otherUser, $category))->toBeFalse();
     expect($policy->forceDelete($otherUser, $category))->toBeFalse();
+});
+
+test('category policy denies delete when category has documents', function () {
+    $policy = new CategoryPolicy;
+    $owner = User::factory()->create();
+    $category = Category::factory()->for($owner)->create([
+        'name' => 'FinanceX',
+        'slug' => 'finance-x',
+    ]);
+
+    Document::factory()->for($owner)->for($category)->create();
+
+    expect($policy->delete($owner, $category))->toBeFalse();
 });

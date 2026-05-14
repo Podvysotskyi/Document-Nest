@@ -1,5 +1,7 @@
 <?php
 
+use App\DTOs\StoreCategoryData;
+use App\DTOs\UpdateCategoryData;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\User;
@@ -42,4 +44,50 @@ test('category repository can filter categories that have documents', function (
 
     expect($categories)->toHaveCount(1);
     expect($categories->first()->id)->toBe($categoryWithDoc->id);
+});
+
+test('category repository can create category for user and generate unique slug', function () {
+    $user = User::factory()->create();
+    $repository = app(CategoryRepository::class);
+
+    $first = $repository->createForUser($user, new StoreCategoryData(name: 'Travel Docs'));
+    $second = $repository->createForUser($user, new StoreCategoryData(name: 'Travel Docs'));
+
+    expect($first->name)->toBe('Travel Docs');
+    expect($first->slug)->toBe('travel-docs');
+    expect($second->slug)->toBe('travel-docs-2');
+});
+
+test('category repository can update category and keep slug unique', function () {
+    $user = User::factory()->create();
+    $repository = app(CategoryRepository::class);
+
+    $existing = Category::factory()->for($user)->create([
+        'name' => 'Work X',
+        'slug' => 'work-x',
+    ]);
+
+    $category = Category::factory()->for($user)->create([
+        'name' => 'ArchiveX',
+        'slug' => 'archive-x',
+    ]);
+
+    $updated = $repository->update($category, new UpdateCategoryData(name: $existing->name));
+
+    expect($updated->name)->toBe('Work X');
+    expect($updated->slug)->toBe('work-x-2');
+});
+
+test('category repository can delete category', function () {
+    $user = User::factory()->create();
+    $repository = app(CategoryRepository::class);
+
+    $category = Category::factory()->for($user)->create([
+        'name' => 'Temp',
+        'slug' => 'temp',
+    ]);
+
+    $repository->delete($category);
+
+    $this->assertDatabaseMissing('categories', ['id' => $category->id]);
 });

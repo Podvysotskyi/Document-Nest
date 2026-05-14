@@ -99,7 +99,7 @@ test('authenticated user can store a document', function () {
     $user = User::factory()->create();
     $category = $user->categories()->where('slug', 'finance')->first();
     $tag = Tag::factory()->for($user)->create(['name' => 'Tax']);
-    $file = UploadedFile::fake()->create('contract.pdf', 100);
+    $file = UploadedFile::fake()->create('contract.pdf', 100, 'application/pdf');
 
     $response = $this->actingAs($user)->post(route('documents.store'), [
         'file' => $file,

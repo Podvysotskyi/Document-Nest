@@ -36,6 +36,24 @@ const page = usePage()
                         >
                             Documents
                         </Link>
+                        <Link
+                            :class="[
+                                'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                                $page.component.startsWith('Categories/') ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
+                            ]"
+                            href="/categories"
+                        >
+                            Categories
+                        </Link>
+                        <Link
+                            :class="[
+                                'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                                $page.component.startsWith('Tags/') ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
+                            ]"
+                            href="/tags"
+                        >
+                            Tags
+                        </Link>
                     </nav>
                 </div>
 

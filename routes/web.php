@@ -3,6 +3,10 @@
 use App\Http\Controllers\Auth\GoogleCallbackController;
 use App\Http\Controllers\Auth\GoogleRedirectController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\Categories\DestroyCategoryController;
+use App\Http\Controllers\Categories\IndexCategoryController;
+use App\Http\Controllers\Categories\StoreCategoryController;
+use App\Http\Controllers\Categories\UpdateCategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Documents\ArchiveDocumentController;
 use App\Http\Controllers\Documents\CreateDocumentController;
@@ -15,6 +19,10 @@ use App\Http\Controllers\Documents\RestoreDocumentController;
 use App\Http\Controllers\Documents\ShowDocumentController;
 use App\Http\Controllers\Documents\StoreDocumentController;
 use App\Http\Controllers\Documents\UpdateDocumentController;
+use App\Http\Controllers\Tags\DestroyTagController;
+use App\Http\Controllers\Tags\IndexTagController;
+use App\Http\Controllers\Tags\StoreTagController;
+use App\Http\Controllers\Tags\UpdateTagController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
@@ -44,4 +52,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/documents/{document}/restore', RestoreDocumentController::class)->name('documents.restore');
     Route::get('/documents/{document}/preview', PreviewDocumentController::class)->name('documents.preview');
     Route::get('/documents/{document}/download', DownloadDocumentController::class)->name('documents.download');
+
+    Route::get('/categories', IndexCategoryController::class)->name('categories.index');
+    Route::post('/categories', StoreCategoryController::class)->name('categories.store');
+    Route::match(['put', 'patch'], '/categories/{category}', UpdateCategoryController::class)->name('categories.update');
+    Route::delete('/categories/{category}', DestroyCategoryController::class)->name('categories.destroy');
+
+    Route::get('/tags', IndexTagController::class)->name('tags.index');
+    Route::post('/tags', StoreTagController::class)->name('tags.store');
+    Route::match(['put', 'patch'], '/tags/{tag}', UpdateTagController::class)->name('tags.update');
+    Route::delete('/tags/{tag}', DestroyTagController::class)->name('tags.destroy');
 });
