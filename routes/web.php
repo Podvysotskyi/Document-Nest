@@ -31,6 +31,7 @@ use App\Http\Controllers\Documents\RestoreDocumentController;
 use App\Http\Controllers\Documents\ShowDocumentController;
 use App\Http\Controllers\Documents\StoreDocumentController;
 use App\Http\Controllers\Documents\UpdateDocumentController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoadmapController;
 use App\Http\Controllers\Tags\DestroyTagController;
 use App\Http\Controllers\Tags\IndexTagController;
@@ -53,6 +54,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/profile', ProfileController::class)->name('profile');
 
     Route::post('/logout', LogoutController::class)->name('logout');
 
