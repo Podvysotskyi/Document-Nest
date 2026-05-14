@@ -8,16 +8,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
-class GoogleAuthController extends Controller
+class GoogleCallbackController extends Controller
 {
-    public function redirect(): RedirectResponse
+    public function __invoke(): RedirectResponse
     {
-        return Socialite::driver('google')->redirect();
-    }
-
-    public function callback(): RedirectResponse
-    {
-        $googleUser = Socialite::driver('google')->user();
+        $googleUser = Socialite::driver('google')->stateless()->user();
 
         $user = User::query()
             ->where('google_id', $googleUser->id)
@@ -39,20 +34,11 @@ class GoogleAuthController extends Controller
             'avatar_url' => $googleUser->avatar,
         ])->save();
 
-        Auth::login($user, remember: true);
+        $user->ensureDefaultCategories();
 
+        Auth::login($user, remember: true);
         request()->session()->regenerate();
 
         return redirect()->intended('/');
-    }
-
-    public function logout(): RedirectResponse
-    {
-        Auth::logout();
-
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
-
-        return redirect()->route('login');
     }
 }

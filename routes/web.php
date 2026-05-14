@@ -1,6 +1,19 @@
 <?php
 
-use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\Auth\GoogleCallbackController;
+use App\Http\Controllers\Auth\GoogleRedirectController;
+use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Documents\ArchiveDocumentController;
+use App\Http\Controllers\Documents\CreateDocumentController;
+use App\Http\Controllers\Documents\DestroyDocumentController;
+use App\Http\Controllers\Documents\DownloadDocumentController;
+use App\Http\Controllers\Documents\EditDocumentController;
+use App\Http\Controllers\Documents\IndexDocumentController;
+use App\Http\Controllers\Documents\PreviewDocumentController;
+use App\Http\Controllers\Documents\ShowDocumentController;
+use App\Http\Controllers\Documents\StoreDocumentController;
+use App\Http\Controllers\Documents\UpdateDocumentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/login', function () {
@@ -8,14 +21,23 @@ Route::get('/login', function () {
 })->middleware('guest')->name('login');
 
 Route::middleware('guest')->group(function () {
-    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
-    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+    Route::get('/auth/google/redirect', GoogleRedirectController::class)->name('auth.google.redirect');
+    Route::get('/auth/google/callback', GoogleCallbackController::class)->name('auth.google.callback');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/', function () {
-        return view('app');
-    })->name('dashboard');
+    Route::get('/', DashboardController::class)->name('dashboard');
 
-    Route::post('/logout', [GoogleAuthController::class, 'logout'])->name('logout');
+    Route::post('/logout', LogoutController::class)->name('logout');
+
+    Route::get('/documents', IndexDocumentController::class)->name('documents.index');
+    Route::get('/documents/create', CreateDocumentController::class)->name('documents.create');
+    Route::post('/documents', StoreDocumentController::class)->name('documents.store');
+    Route::get('/documents/{document}', ShowDocumentController::class)->name('documents.show');
+    Route::get('/documents/{document}/edit', EditDocumentController::class)->name('documents.edit');
+    Route::match(['put', 'patch'], '/documents/{document}', UpdateDocumentController::class)->name('documents.update');
+    Route::delete('/documents/{document}', DestroyDocumentController::class)->name('documents.destroy');
+    Route::post('/documents/{document}/archive', ArchiveDocumentController::class)->name('documents.archive');
+    Route::get('/documents/{document}/preview', PreviewDocumentController::class)->name('documents.preview');
+    Route::get('/documents/{document}/download', DownloadDocumentController::class)->name('documents.download');
 });
