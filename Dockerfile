@@ -23,40 +23,8 @@ RUN npm ci
 COPY --from=php-build /var/www/html/vendor ./vendor
 RUN npm run build
 
-# Stage 3: Base PHP environment
-FROM php:8.5-alpine AS php-base
-
-WORKDIR /var/www/html
-
-# Install system dependencies
-RUN apk add --no-cache \
-    postgresql-dev \
-    libpng-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    git \
-    oniguruma-dev \
-    curl
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo_pgsql pgsql gd zip bcmath pcntl
-
-# Copy app code
-COPY --from=php-build /var/www/html /var/www/html
-COPY --from=node-build /var/www/html/public/build ./public/build
-
-# Copy entrypoint
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh && \
-    chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-VOLUME ["/var/www/html/storage"]
-
-ENTRYPOINT ["entrypoint.sh"]
-
-# Stage 4: App image (FrankenPHP)
-FROM dunglas/frankenphp:php8.5-alpine AS app
+# Stage 3: Runtime image
+FROM dunglas/frankenphp:php8.5-alpine
 
 LABEL maintainer="Serhii Podvysotskyi"
 
@@ -77,25 +45,16 @@ RUN apk add --no-cache \
 # Install PHP extensions
 RUN docker-php-ext-install pdo_pgsql pgsql gd zip bcmath pcntl
 
-# Copy from base
-COPY --from=php-base /var/www/html /var/www/html
-COPY --from=php-base /usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
+# Copy app code
+COPY --from=php-build /var/www/html /var/www/html
+COPY --from=node-build /var/www/html/public/build ./public/build
 
-VOLUME ["/var/www/html/storage"]
+# Copy entrypoint
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh && \
+    chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-EXPOSE 8000
+VOLUME ["/var/www/html/storage/app/private", "/var/www/html/storage/app/public"]
 
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=8000"]
-
-# Stage 5: Worker image
-FROM php-base AS worker
-
-LABEL maintainer="Serhii Podvysotskyi"
-
-WORKDIR /var/www/html
-
-VOLUME ["/var/www/html/storage"]
-
-ENTRYPOINT ["entrypoint.sh"]
-CMD ["php", "artisan", "queue:work"]

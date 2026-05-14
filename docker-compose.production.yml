@@ -1,0 +1,95 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: document-nest/app:${APP_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    command: [ "php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=8000" ]
+    volumes:
+      - public_storage:/var/www/html/storage/app/public
+      - private_storage:/var/www/html/storage/app/private
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+      - edge
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://127.0.0.1:8000 >/dev/null || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  worker:
+    image: document-nest/app:${APP_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    command: [ "php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--timeout=90" ]
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - public_storage:/var/www/html/storage/app/public
+      - private_storage:/var/www/html/storage/app/private
+    networks:
+      - backend
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: [ "redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}" ]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.5.0
+    restart: unless-stopped
+    command: [ "tunnel", "--no-autoupdate", "run", "--token", "${CLOUDFLARED_TUNNEL_TOKEN}" ]
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - edge
+
+networks:
+  backend:
+  edge:
+
+volumes:
+  public_storage:
+  private_storage:
+  postgres_data:
+  redis_data:

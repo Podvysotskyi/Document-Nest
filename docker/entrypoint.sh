@@ -1,6 +1,7 @@
 #!/bin/sh
 
-# Run migrations and seeders
+set -e
+
 echo "Running migrations..."
 php artisan migrate --force
 
@@ -10,14 +11,12 @@ php artisan db:seed --force
 echo "Creating storage link..."
 php artisan storage:link --force
 
-# Cache configuration and routes
 echo "Caching configuration and routes..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
-# Fix permissions
 echo "Fixing permissions..."
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
