@@ -53,7 +53,7 @@ class AuthTest extends TestCase
 
         $response = $this->get(route('auth.google.callback'));
 
-        $response->assertRedirect('/');
+        $response->assertRedirect(route('dashboard'));
         $this->assertAuthenticated();
 
         $user = User::where('email', 'john@example.com')->first();

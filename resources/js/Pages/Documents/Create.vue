@@ -1,6 +1,7 @@
 <script setup>
+import {computed} from 'vue'
 import {Head, useForm} from '@inertiajs/vue3'
-import {CloudArrowUpIcon, XMarkIcon} from '@heroicons/vue/24/outline'
+import {CloudArrowUpIcon, ExclamationTriangleIcon, XMarkIcon} from '@heroicons/vue/24/outline'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import Button from '../../Components/UI/Button.vue'
 import Input from '../../Components/UI/Input.vue'
@@ -25,8 +26,12 @@ const form = useForm({
     notes: '',
 })
 
+const hasErrors = computed(() => Object.keys(form.errors).length > 0)
+
 const submit = () => {
-    form.post('/documents')
+    form.post('/documents', {
+        forceFormData: true,
+    })
 }
 </script>
 
@@ -42,10 +47,25 @@ const submit = () => {
             </header>
 
             <form class="space-y-6" @submit.prevent="submit">
+                <div
+                    v-if="hasErrors"
+                    class="flex gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                >
+                    <ExclamationTriangleIcon class="mt-0.5 h-5 w-5 shrink-0"/>
+                    <div>
+                        <p class="font-semibold">Review the highlighted fields.</p>
+                        <p class="mt-0.5 text-red-600">Your document has not been saved yet.</p>
+                    </div>
+                </div>
+
                 <Card title="Document File">
                     <div class="space-y-4">
                         <div
-                            class="flex items-center justify-center rounded-lg border-2 border-dashed border-zinc-200 bg-zinc-50/50 p-6 transition-colors hover:border-zinc-300">
+                            :class="[
+                                'flex items-center justify-center rounded-lg border-2 border-dashed bg-zinc-50/50 p-6 transition-colors hover:border-zinc-300',
+                                form.errors.file ? 'border-red-300 bg-red-50/50' : 'border-zinc-200'
+                            ]"
+                        >
                             <div class="text-center">
                                 <CloudArrowUpIcon class="mx-auto h-10 w-10 text-zinc-400"/>
                                 <div class="mt-4 flex text-sm text-zinc-600">
@@ -57,7 +77,7 @@ const submit = () => {
                                     </label>
                                     <p class="pl-1">or drag and drop</p>
                                 </div>
-                                <p class="text-xs text-zinc-500">PDF, PNG, JPG up to 10MB</p>
+                                <p class="text-xs text-zinc-500">PDF, PNG, JPG, WebP up to 20MB</p>
                             </div>
                         </div>
                         <div v-if="form.file"
@@ -66,6 +86,15 @@ const submit = () => {
                             <button class="text-zinc-400 hover:text-zinc-600" type="button" @click="form.file = null">
                                 <XMarkIcon class="h-5 w-5"/>
                             </button>
+                        </div>
+                        <div v-if="form.progress" class="space-y-1.5">
+                            <div class="h-2 overflow-hidden rounded-full bg-zinc-100">
+                                <div
+                                    :style="{ width: `${form.progress.percentage}%` }"
+                                    class="h-full rounded-full bg-zinc-900 transition-all"
+                                />
+                            </div>
+                            <p class="text-xs text-zinc-500">Uploading {{ form.progress.percentage }}%</p>
                         </div>
                         <p v-if="form.errors.file" class="text-sm text-red-600">{{ form.errors.file }}</p>
                     </div>
@@ -129,9 +158,9 @@ const submit = () => {
                     </p>
                 </Card>
 
-                <div class="flex items-center justify-end gap-3">
-                    <Button href="/documents" variant="secondary">Cancel</Button>
-                    <Button :disabled="form.processing" type="submit">
+                <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+                    <Button class="w-full sm:w-auto" href="/documents" variant="secondary">Cancel</Button>
+                    <Button :disabled="form.processing" class="w-full sm:w-auto" type="submit">
                         {{ form.processing ? 'Uploading...' : 'Save Document' }}
                     </Button>
                 </div>

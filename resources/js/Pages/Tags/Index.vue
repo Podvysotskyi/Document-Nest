@@ -1,6 +1,6 @@
 <script setup>
 import {Head, useForm} from '@inertiajs/vue3'
-import {PencilSquareIcon, TrashIcon} from '@heroicons/vue/24/outline'
+import {PencilSquareIcon, TagIcon, TrashIcon} from '@heroicons/vue/24/outline'
 import {ref} from 'vue'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import Card from '../../Components/UI/Card.vue'
@@ -111,7 +111,9 @@ const destroyTag = (tagId) => {
                                         required
                                     />
                                 </div>
-                                <Button :disabled="editForm.processing" size="sm" type="submit">Save</Button>
+                                <Button :disabled="editForm.processing" size="sm" type="submit">
+                                    {{ editForm.processing ? 'Saving...' : 'Save' }}
+                                </Button>
                                 <Button size="sm" type="button" variant="secondary" @click="cancelEdit">Cancel</Button>
                             </form>
 
@@ -122,6 +124,7 @@ const destroyTag = (tagId) => {
                                 </div>
                                 <div class="flex items-center gap-1">
                                     <Button
+                                        :disabled="editForm.processing"
                                         size="sm"
                                         type="button"
                                         variant="ghost"
@@ -140,8 +143,12 @@ const destroyTag = (tagId) => {
                                 </div>
                             </div>
                         </div>
-                        <div v-if="tags.length === 0" class="px-4 py-10 text-center text-sm text-zinc-500">
-                            No tags yet.
+                        <div v-if="tags.length === 0" class="px-4 py-12 text-center text-sm text-zinc-500">
+                            <div class="flex flex-col items-center gap-2">
+                                <TagIcon class="h-9 w-9 text-zinc-300"/>
+                                <p class="font-semibold text-zinc-700">No tags yet</p>
+                                <p class="max-w-sm">Create tags to label documents across categories.</p>
+                            </div>
                         </div>
                     </div>
                 </Card>

@@ -1,5 +1,7 @@
 <script setup>
+import {computed} from 'vue'
 import {Head, useForm} from '@inertiajs/vue3'
+import {ExclamationTriangleIcon} from '@heroicons/vue/24/outline'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import Button from '../../Components/UI/Button.vue'
 import Input from '../../Components/UI/Input.vue'
@@ -24,6 +26,8 @@ const form = useForm({
     notes: props.document.notes ?? '',
 })
 
+const hasErrors = computed(() => Object.keys(form.errors).length > 0)
+
 const submit = () => {
     form.put(`/documents/${props.document.id}`)
 }
@@ -40,6 +44,17 @@ const submit = () => {
             </header>
 
             <form class="space-y-6" @submit.prevent="submit">
+                <div
+                    v-if="hasErrors"
+                    class="flex gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                >
+                    <ExclamationTriangleIcon class="mt-0.5 h-5 w-5 shrink-0"/>
+                    <div>
+                        <p class="font-semibold">Review the highlighted fields.</p>
+                        <p class="mt-0.5 text-red-600">Your changes have not been saved yet.</p>
+                    </div>
+                </div>
+
                 <Card title="General Information">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="sm:col-span-2">
@@ -98,9 +113,10 @@ const submit = () => {
                     </p>
                 </Card>
 
-                <div class="flex items-center justify-end gap-3">
-                    <Button :href="`/documents/${document.id}`" variant="secondary">Cancel</Button>
-                    <Button :disabled="form.processing" type="submit">
+                <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+                    <Button :href="`/documents/${document.id}`" class="w-full sm:w-auto" variant="secondary">Cancel
+                    </Button>
+                    <Button :disabled="form.processing" class="w-full sm:w-auto" type="submit">
                         {{ form.processing ? 'Saving...' : 'Update Document' }}
                     </Button>
                 </div>

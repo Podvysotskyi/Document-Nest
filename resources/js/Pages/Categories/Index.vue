@@ -1,6 +1,6 @@
 <script setup>
 import {Head, useForm} from '@inertiajs/vue3'
-import {PencilSquareIcon, TrashIcon} from '@heroicons/vue/24/outline'
+import {FolderIcon, PencilSquareIcon, TrashIcon} from '@heroicons/vue/24/outline'
 import {ref} from 'vue'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import Card from '../../Components/UI/Card.vue'
@@ -115,7 +115,9 @@ const destroyCategory = (categoryId, documentsCount) => {
                                         required
                                     />
                                 </div>
-                                <Button :disabled="editForm.processing" size="sm" type="submit">Save</Button>
+                                <Button :disabled="editForm.processing" size="sm" type="submit">
+                                    {{ editForm.processing ? 'Saving...' : 'Save' }}
+                                </Button>
                                 <Button size="sm" type="button" variant="secondary" @click="cancelEdit">Cancel</Button>
                             </form>
 
@@ -134,7 +136,7 @@ const destroyCategory = (categoryId, documentsCount) => {
                                         <PencilSquareIcon class="h-4 w-4"/>
                                     </Button>
                                     <Button
-                                        :disabled="category.documents_count > 0"
+                                        :disabled="editForm.processing || category.documents_count > 0"
                                         :title="category.documents_count > 0 ? 'Cannot delete category with documents' : 'Delete category'"
                                         size="sm"
                                         type="button"
@@ -146,8 +148,12 @@ const destroyCategory = (categoryId, documentsCount) => {
                                 </div>
                             </div>
                         </div>
-                        <div v-if="categories.length === 0" class="px-4 py-10 text-center text-sm text-zinc-500">
-                            No categories yet.
+                        <div v-if="categories.length === 0" class="px-4 py-12 text-center text-sm text-zinc-500">
+                            <div class="flex flex-col items-center gap-2">
+                                <FolderIcon class="h-9 w-9 text-zinc-300"/>
+                                <p class="font-semibold text-zinc-700">No categories yet</p>
+                                <p class="max-w-sm">Create categories to group related documents.</p>
+                            </div>
                         </div>
                     </div>
                 </Card>

@@ -75,6 +75,11 @@ Run the test suite:
 php artisan test --compact
 ```
 
+## License
+
+This project is licensed under the terms of the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for
+details.
+
 ## Implementation Plan
 
 The full build plan, feature scope, phased roadmap, and test plan are tracked in:

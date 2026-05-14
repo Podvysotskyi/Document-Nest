@@ -1,5 +1,5 @@
 <script setup>
-import {watch} from 'vue'
+import {computed, watch} from 'vue'
 import {Head, Link, router, useForm} from '@inertiajs/vue3'
 import debounce from 'lodash/debounce'
 import {ChevronDownIcon, ChevronUpIcon, CloudArrowUpIcon, DocumentIcon} from '@heroicons/vue/24/outline'
@@ -34,6 +34,17 @@ const categoryOptions = [
 ]
 
 const tagOptions = props.tags.map((tag) => ({value: tag.id, label: tag.name}))
+
+const hasActiveFilters = computed(() => {
+    return Boolean(form.q || form.category_id || form.tag_id || form.status || form.expiry_from || form.expiry_to)
+})
+
+const emptyTitle = computed(() => hasActiveFilters.value ? 'No matching documents' : 'No documents yet')
+const emptyMessage = computed(() => {
+    return hasActiveFilters.value
+        ? 'Adjust your filters or search terms to see more results.'
+        : 'Upload your first document to start building your private library.'
+})
 
 const sortBy = (field) => {
     if (form.sort === field) {
@@ -140,7 +151,60 @@ watch(
             </Card>
 
             <Card padding="p-0">
-                <div :class="['overflow-x-auto transition-opacity', form.processing ? 'opacity-60' : 'opacity-100']">
+                <div class="relative">
+                    <div
+                        v-if="form.processing"
+                        class="absolute right-4 top-3 z-10 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs font-medium text-zinc-500 shadow-xs"
+                    >
+                        Updating results...
+                    </div>
+
+                    <div
+                        :class="['divide-y divide-zinc-100 md:hidden transition-opacity', form.processing ? 'opacity-60' : 'opacity-100']"
+                    >
+                        <button
+                            v-for="document in documents.data"
+                            :key="document.id"
+                            class="block w-full px-4 py-4 text-left transition-colors hover:bg-zinc-50"
+                            type="button"
+                            @click="router.visit(`/documents/${document.id}`)"
+                        >
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="truncate text-sm font-semibold text-zinc-900">{{ document.title }}</p>
+                                    <p class="mt-1 text-xs text-zinc-500">Updated {{ document.updated_at }}</p>
+                                </div>
+                                <Badge :variant="getStatusVariant(document.status)">
+                                    {{ document.status }}
+                                </Badge>
+                            </div>
+                            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                                <Badge v-if="document.category" variant="neutral">
+                                    {{ document.category.name }}
+                                </Badge>
+                                <span v-else class="rounded-full bg-zinc-100 px-2 py-0.5 font-medium text-zinc-500">
+                                    Uncategorized
+                                </span>
+                                <span
+                                    :class="document.status === 'expired' ? 'font-medium text-red-600' : 'text-zinc-500'"
+                                >
+                                    Expiry {{ document.expiry_date ?? 'not set' }}
+                                </span>
+                            </div>
+                        </button>
+
+                        <div v-if="documents.data.length === 0" class="px-4 py-12 text-center text-zinc-500">
+                            <div class="flex flex-col items-center gap-2">
+                                <DocumentIcon class="h-9 w-9 text-zinc-300"/>
+                                <p class="text-sm font-semibold text-zinc-700">{{ emptyTitle }}</p>
+                                <p class="max-w-sm text-sm">{{ emptyMessage }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        :class="['hidden overflow-x-auto transition-opacity md:block', form.processing ? 'opacity-60' : 'opacity-100']"
+                    >
                     <table class="w-full text-left text-sm text-zinc-900">
                         <thead class="bg-zinc-50/50 text-xs font-semibold uppercase tracking-wider text-zinc-500">
                         <tr>
@@ -220,21 +284,22 @@ watch(
                         <tr v-if="documents.data.length === 0">
                             <td class="px-6 py-12 text-center text-zinc-500" colspan="4">
                                 <div class="flex flex-col items-center gap-2">
-                                    <DocumentIcon class="h-8 w-8 text-zinc-300"/>
-                                    <p>No documents found matching your criteria.</p>
+                                    <DocumentIcon class="h-9 w-9 text-zinc-300"/>
+                                    <p class="font-semibold text-zinc-700">{{ emptyTitle }}</p>
+                                    <p class="max-w-sm">{{ emptyMessage }}</p>
                                 </div>
                             </td>
                         </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
                 <template v-if="documents.links.length > 3" #footer>
-                    <div class="flex items-center justify-between">
-                        <!-- Simplified pagination for brevity, or reuse a dedicated component if available -->
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div class="text-xs text-zinc-500">
                             Showing {{ documents.from }} to {{ documents.to }} of {{ documents.total }} results
                         </div>
-                        <div class="flex gap-1">
+                        <div class="flex flex-wrap gap-1">
                             <Link
                                 v-for="link in documents.links"
                                 :key="link.label"

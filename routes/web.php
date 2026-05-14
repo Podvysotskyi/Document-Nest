@@ -19,6 +19,7 @@ use App\Http\Controllers\Documents\RestoreDocumentController;
 use App\Http\Controllers\Documents\ShowDocumentController;
 use App\Http\Controllers\Documents\StoreDocumentController;
 use App\Http\Controllers\Documents\UpdateDocumentController;
+use App\Http\Controllers\RoadmapController;
 use App\Http\Controllers\Tags\DestroyTagController;
 use App\Http\Controllers\Tags\IndexTagController;
 use App\Http\Controllers\Tags\StoreTagController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Tags\UpdateTagController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
+Route::get('/roadmap', RoadmapController::class)->name('roadmap');
 
 Route::get('/login', function () {
     return view('auth.login');

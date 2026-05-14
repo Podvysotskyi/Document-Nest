@@ -1,13 +1,15 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "podvysotskyi/document-nest",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Private personal document vault built with Laravel, Inertia, and Vue.",
     "keywords": [
         "laravel",
-        "framework"
+        "document-management",
+        "inertia",
+        "vue"
     ],
-    "license": "MIT",
+    "license": "GPL-3.0-or-later",
     "require": {
         "php": "^8.3",
         "inertiajs/inertia-laravel": "^3.1",

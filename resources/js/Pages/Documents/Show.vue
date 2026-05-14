@@ -1,6 +1,7 @@
 <script setup>
+import {ref} from 'vue'
 import {Head, router} from '@inertiajs/vue3'
-import {ArchiveBoxIcon, ArrowDownTrayIcon, ArrowPathIcon, PencilIcon} from '@heroicons/vue/24/outline'
+import {ArchiveBoxIcon, ArrowDownTrayIcon, ArrowPathIcon, PencilIcon, TrashIcon} from '@heroicons/vue/24/outline'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import Button from '../../Components/UI/Button.vue'
 import Badge from '../../Components/UI/Badge.vue'
@@ -11,6 +12,8 @@ const props = defineProps({
     previewUrl: String,
     downloadUrl: String,
 })
+
+const deleting = ref(false)
 
 const getStatusVariant = (status) => {
     switch (status) {
@@ -32,6 +35,18 @@ const archive = () => {
 const restore = () => {
     router.post(`/documents/${props.document.id}/restore`)
 }
+
+const destroyDocument = () => {
+    router.delete(`/documents/${props.document.id}`, {
+        onBefore: () => window.confirm('Delete this document? This will permanently remove the file.'),
+        onStart: () => {
+            deleting.value = true
+        },
+        onFinish: () => {
+            deleting.value = false
+        },
+    })
+}
 </script>
 
 <template>
@@ -40,9 +55,11 @@ const restore = () => {
     <AppLayout>
         <div class="space-y-6">
             <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <div class="flex items-center gap-3">
-                        <h1 class="text-3xl font-bold tracking-tight text-zinc-900">{{ document.title }}</h1>
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h1 class="min-w-0 break-words text-3xl font-bold tracking-tight text-zinc-900">
+                            {{ document.title }}
+                        </h1>
                         <Badge :variant="getStatusVariant(document.status)">
                             {{ document.status }}
                         </Badge>
@@ -51,22 +68,33 @@ const restore = () => {
                         Uploaded by {{ document.user?.name || 'you' }} • Last updated {{ document.updated_at }}
                     </p>
                 </div>
-                <div class="flex items-center gap-2">
-                    <Button :href="`/documents/${document.id}/edit`" variant="secondary">
+                <div class="flex flex-wrap items-center gap-2">
+                    <Button :href="`/documents/${document.id}/edit`" class="flex-1 sm:flex-none" variant="secondary">
                         <PencilIcon class="mr-2 h-4 w-4"/>
                         Edit
                     </Button>
-                    <Button v-if="document.status === 'archived'" variant="secondary" @click="restore">
+                    <Button v-if="document.status === 'archived'" class="flex-1 sm:flex-none" variant="secondary"
+                            @click="restore">
                         <ArrowPathIcon class="mr-2 h-4 w-4"/>
                         Restore
                     </Button>
-                    <Button v-else variant="secondary" @click="archive">
+                    <Button v-else class="flex-1 sm:flex-none" variant="secondary" @click="archive">
                         <ArchiveBoxIcon class="mr-2 h-4 w-4"/>
                         Archive
                     </Button>
-                    <Button :href="downloadUrl" as="a" target="_blank">
+                    <Button :href="downloadUrl" as="a" class="flex-1 sm:flex-none" target="_blank">
                         <ArrowDownTrayIcon class="mr-2 h-4 w-4"/>
                         Download
+                    </Button>
+                    <Button
+                        :disabled="deleting"
+                        class="flex-1 sm:flex-none"
+                        type="button"
+                        variant="danger"
+                        @click="destroyDocument"
+                    >
+                        <TrashIcon class="mr-2 h-4 w-4"/>
+                        {{ deleting ? 'Deleting...' : 'Delete' }}
                     </Button>
                 </div>
             </header>
