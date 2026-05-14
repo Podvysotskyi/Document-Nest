@@ -1,5 +1,5 @@
 <script setup>
-import { Link, usePage } from '@inertiajs/vue3'
+import {Link, usePage} from '@inertiajs/vue3'
 
 const page = usePage()
 </script>
@@ -11,7 +11,7 @@ const page = usePage()
                 <Link href="/" class="font-semibold">Document Nest</Link>
 
                 <nav class="flex items-center gap-2 text-sm">
-                    <Link href="/" class="rounded-md px-2 py-1 hover:bg-zinc-100">Dashboard</Link>
+                    <Link class="rounded-md px-2 py-1 hover:bg-zinc-100" href="/dashboard">Dashboard</Link>
                     <Link href="/documents" class="rounded-md px-2 py-1 hover:bg-zinc-100">Documents</Link>
                 </nav>
 

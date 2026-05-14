@@ -21,10 +21,7 @@ pest()->extend(DuskTestCase::class)
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Unit');
-
-pest()->extend(TestCase::class)
-    ->in('Feature');
+    ->in('Unit', 'Feature');
 
 /*
 |--------------------------------------------------------------------------
