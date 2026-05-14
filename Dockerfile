@@ -81,21 +81,21 @@ RUN docker-php-ext-install pdo_pgsql pgsql gd zip bcmath pcntl
 COPY --from=php-base /var/www/html /var/www/html
 COPY --from=php-base /usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# Copy configurations
-COPY docker/Caddyfile.json /etc/caddy/Caddyfile
-
 VOLUME ["/var/www/html/storage"]
 
-RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp
-
-EXPOSE 80 443 443/udp
+EXPOSE 8000
 
 ENTRYPOINT ["entrypoint.sh"]
-CMD ["php-server"]
+CMD ["php", "artisan", "octane:frankenphp"]
 
 # Stage 5: Worker image
 FROM php-base AS worker
 
 LABEL maintainer="Serhii Podvysotskyi"
 
-CMD ["worker"]
+WORKDIR /var/www/html
+
+VOLUME ["/var/www/html/storage"]
+
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["php", "artisan", "queue:work"]

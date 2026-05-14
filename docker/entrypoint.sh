@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 # Run migrations and seeders
 echo "Running migrations..."
@@ -21,13 +20,5 @@ php artisan event:cache
 # Fix permissions
 echo "Fixing permissions..."
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-if [ "$1" = "php-server" ]; then
-    echo "Starting FrankenPHP..."
-    exec frankenphp run --config /etc/caddy/Caddyfile --adapter json
-elif [ "$1" = "worker" ]; then
-    echo "Starting Laravel worker..."
-    exec php artisan queue:work --sleep=3 --tries=3 --max-time=3600
-fi
 
 exec "$@"
