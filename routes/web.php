@@ -1,5 +1,17 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\Roadmap\DestroyRoadmapItemController;
+use App\Http\Controllers\Admin\Roadmap\DestroyRoadmapPhaseController;
+use App\Http\Controllers\Admin\Roadmap\IndexRoadmapController;
+use App\Http\Controllers\Admin\Roadmap\MoveRoadmapItemController;
+use App\Http\Controllers\Admin\Roadmap\MoveRoadmapPhaseController;
+use App\Http\Controllers\Admin\Roadmap\StoreRoadmapItemController;
+use App\Http\Controllers\Admin\Roadmap\StoreRoadmapPhaseController;
+use App\Http\Controllers\Admin\Roadmap\UpdateRoadmapItemController;
+use App\Http\Controllers\Admin\Roadmap\UpdateRoadmapPhaseController;
+use App\Http\Controllers\Admin\Users\IndexUserController as AdminIndexUserController;
+use App\Http\Controllers\Admin\Users\UpdateUserRolesController;
 use App\Http\Controllers\Auth\GoogleCallbackController;
 use App\Http\Controllers\Auth\GoogleRedirectController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -42,6 +54,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     Route::post('/logout', LogoutController::class)->name('logout');
+
+    Route::prefix('admin')->name('admin.')->middleware('can:access-admin')->group(function () {
+        Route::get('/', AdminDashboardController::class)->name('dashboard');
+        Route::get('/users', AdminIndexUserController::class)->name('users.index');
+        Route::patch('/users/{user}/roles', UpdateUserRolesController::class)->name('users.roles.update');
+        Route::get('/roadmap', IndexRoadmapController::class)->name('roadmap.index');
+        Route::post('/roadmap/phases', StoreRoadmapPhaseController::class)->name('roadmap.phases.store');
+        Route::patch('/roadmap/phases/{roadmapPhase}', UpdateRoadmapPhaseController::class)->whereNumber('roadmapPhase')->name('roadmap.phases.update');
+        Route::delete('/roadmap/phases/{roadmapPhase}', DestroyRoadmapPhaseController::class)->whereNumber('roadmapPhase')->name('roadmap.phases.destroy');
+        Route::post('/roadmap/phases/{roadmapPhase}/move', MoveRoadmapPhaseController::class)->whereNumber('roadmapPhase')->name('roadmap.phases.move');
+        Route::post('/roadmap/phases/{roadmapPhase}/items', StoreRoadmapItemController::class)->whereNumber('roadmapPhase')->name('roadmap.items.store');
+        Route::patch('/roadmap/items/{roadmapItem}', UpdateRoadmapItemController::class)->whereNumber('roadmapItem')->name('roadmap.items.update');
+        Route::delete('/roadmap/items/{roadmapItem}', DestroyRoadmapItemController::class)->whereNumber('roadmapItem')->name('roadmap.items.destroy');
+        Route::post('/roadmap/items/{roadmapItem}/move', MoveRoadmapItemController::class)->whereNumber('roadmapItem')->name('roadmap.items.move');
+    });
 
     Route::get('/documents', IndexDocumentController::class)->name('documents.index');
     Route::get('/documents/create', CreateDocumentController::class)->name('documents.create');

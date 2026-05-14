@@ -11,6 +11,8 @@ abstract class TestCase extends BaseTestCase
 {
     use RefreshDatabase;
 
+    protected bool $seed = true;
+
     public function createApplication(): Application
     {
         $this->forceSqliteTestingEnvironment();
@@ -31,6 +33,7 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        $this->withoutVite();
         $this->withHeader('Sec-Fetch-Site', 'same-origin');
     }
 
@@ -38,6 +41,7 @@ abstract class TestCase extends BaseTestCase
     {
         foreach ([
             'APP_ENV' => 'testing',
+            'APP_KEY' => 'base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
             'DB_CONNECTION' => 'sqlite',
             'DB_DATABASE' => ':memory:',
             'DB_URL' => '',

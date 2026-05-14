@@ -2,12 +2,9 @@
 
 namespace App\Repositories;
 
-use App\DTOs\StoreTagData;
-use App\DTOs\UpdateTagData;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Str;
 
 class TagRepository
 {
@@ -34,21 +31,23 @@ class TagRepository
             ->get(['id', 'name']);
     }
 
-    public function createForUser(User $user, StoreTagData $data): Tag
+    /**
+     * @param  array{name: string, slug: string}  $attributes
+     */
+    public function createForUser(User $user, array $attributes): Tag
     {
         return Tag::query()->create([
             'user_id' => $user->id,
-            'name' => $data->name,
-            'slug' => $this->generateUniqueSlug($user, $data->name),
+            ...$attributes,
         ]);
     }
 
-    public function update(Tag $tag, UpdateTagData $data): Tag
+    /**
+     * @param  array{name: string, slug: string}  $attributes
+     */
+    public function update(Tag $tag, array $attributes): Tag
     {
-        $tag->update([
-            'name' => $data->name,
-            'slug' => $this->generateUniqueSlug($tag->user, $data->name, $tag),
-        ]);
+        $tag->update($attributes);
 
         return $tag;
     }
@@ -58,22 +57,7 @@ class TagRepository
         $tag->delete();
     }
 
-    private function generateUniqueSlug(User $user, string $name, ?Tag $ignore = null): string
-    {
-        $baseSlug = Str::slug($name);
-        $baseSlug = $baseSlug === '' ? 'tag' : $baseSlug;
-        $slug = $baseSlug;
-        $suffix = 2;
-
-        while ($this->slugExistsForUser($user, $slug, $ignore)) {
-            $slug = "{$baseSlug}-{$suffix}";
-            $suffix++;
-        }
-
-        return $slug;
-    }
-
-    private function slugExistsForUser(User $user, string $slug, ?Tag $ignore = null): bool
+    public function slugExistsForUser(User $user, string $slug, ?Tag $ignore = null): bool
     {
         return Tag::query()
             ->ownedBy($user)

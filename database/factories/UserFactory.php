@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -12,8 +13,6 @@ use Illuminate\Support\Str;
 class UserFactory extends Factory
 {
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
@@ -25,5 +24,22 @@ class UserFactory extends Factory
             'avatar_url' => fake()->imageUrl(),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    public function admin(): static
+    {
+        return $this->withRole(UserRole::Admin);
+    }
+
+    public function developer(): static
+    {
+        return $this->withRole(UserRole::Developer);
+    }
+
+    private function withRole(UserRole $role): static
+    {
+        return $this->afterCreating(function (User $user) use ($role): void {
+            $user->roles()->syncWithoutDetaching([$role->value]);
+        });
     }
 }

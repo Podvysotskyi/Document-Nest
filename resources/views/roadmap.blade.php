@@ -81,7 +81,7 @@
                             @foreach ($phase['items'] as $item)
                                 <li class="flex gap-3 text-sm leading-6 text-zinc-700">
                                     <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600"></span>
-                                    <span>{{ $item }}</span>
+                                    <span>{{ $item['title'] }}</span>
                                 </li>
                             @endforeach
                         </ul>

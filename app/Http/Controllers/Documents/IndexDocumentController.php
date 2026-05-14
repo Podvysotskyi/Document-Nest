@@ -7,18 +7,18 @@ use App\Http\Requests\IndexDocumentRequest;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\DocumentListResource;
 use App\Http\Resources\TagResource;
-use App\Repositories\CategoryRepository;
-use App\Repositories\DocumentRepository;
-use App\Repositories\TagRepository;
+use App\Services\CategoryService;
+use App\Services\DocumentService;
+use App\Services\TagService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class IndexDocumentController extends Controller
 {
     public function __construct(
-        private DocumentRepository $documentRepository,
-        private CategoryRepository $categoryRepository,
-        private TagRepository $tagRepository
+        private DocumentService $documentService,
+        private CategoryService $categoryService,
+        private TagService $tagService,
     ) {}
 
     public function __invoke(IndexDocumentRequest $request): Response
@@ -27,7 +27,7 @@ class IndexDocumentController extends Controller
 
         return Inertia::render('Documents/Index', [
             'documents' => DocumentListResource::collection(
-                $this->documentRepository->paginateForUser($request->user(), $filters)
+                $this->documentService->paginateForUser($request->user(), $filters)
             )->response()->getData(true),
             'filters' => [
                 'q' => $filters->query ?? '',
@@ -39,8 +39,8 @@ class IndexDocumentController extends Controller
                 'sort' => $filters->sort,
                 'direction' => $filters->direction ?? '',
             ],
-            'categories' => CategoryResource::collection($this->categoryRepository->listForUser($request->user(), true))->resolve(),
-            'tags' => TagResource::collection($this->tagRepository->listForUser($request->user()))->resolve(),
+            'categories' => CategoryResource::collection($this->categoryService->listForUser($request->user(), true))->resolve(),
+            'tags' => TagResource::collection($this->tagService->listForUser($request->user()))->resolve(),
         ]);
     }
 }

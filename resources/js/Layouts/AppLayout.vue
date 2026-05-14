@@ -1,6 +1,6 @@
 <script setup>
 import {Link, usePage} from '@inertiajs/vue3'
-import {DocumentTextIcon} from '@heroicons/vue/24/outline'
+import {DocumentTextIcon, ShieldCheckIcon} from '@heroicons/vue/24/outline'
 
 const page = usePage()
 </script>
@@ -54,13 +54,26 @@ const page = usePage()
                         >
                             Tags
                         </Link>
+                        <Link
+                            v-if="$page.props.auth.user?.is_admin"
+                            :class="[
+                                'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                                $page.component.startsWith('Admin/') ? 'bg-zinc-100 text-zinc-900' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
+                            ]"
+                            href="/admin"
+                        >
+                            Admin
+                        </Link>
                     </nav>
                 </div>
 
                 <div class="flex items-center gap-4">
                     <div class="hidden items-center gap-3 border-r border-zinc-200 pr-4 sm:flex">
                         <div class="text-right">
-                            <div class="text-sm font-medium text-zinc-900">{{ $page.props.auth.user?.name }}</div>
+                            <div class="flex items-center justify-end gap-1.5 text-sm font-medium text-zinc-900">
+                                <ShieldCheckIcon v-if="$page.props.auth.user?.is_admin" class="h-4 w-4 text-emerald-600"/>
+                                <span>{{ $page.props.auth.user?.name }}</span>
+                            </div>
                             <div class="text-xs text-zinc-500">{{ $page.props.auth.user?.email }}</div>
                         </div>
                         <img

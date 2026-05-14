@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery;
@@ -29,7 +32,7 @@ class AuthTest extends TestCase
     {
         $this->get(route('login'))
             ->assertStatus(200)
-            ->assertSee('Sign in to your account');
+            ->assertSee('Sign in to Document Nest');
     }
 
     public function test_authenticated_user_is_redirected_from_login_page(): void
@@ -43,6 +46,11 @@ class AuthTest extends TestCase
 
     public function test_guest_can_login_with_google(): void
     {
+        Storage::fake('public');
+        Http::fake([
+            'example.com/*' => Http::response('fake-image-bytes', 200, ['Content-Type' => 'image/jpeg']),
+        ]);
+
         $abstractUser = Mockery::mock(SocialiteUser::class);
         $abstractUser->shouldReceive('getId')->andReturn('12345');
         $abstractUser->shouldReceive('getEmail')->andReturn('john@example.com');
@@ -60,6 +68,9 @@ class AuthTest extends TestCase
         $this->assertNotNull($user);
         $this->assertSame('John Doe', $user->name);
         $this->assertSame(9, $user->categories()->count());
+        Storage::disk('public')->assertExists("users/{$user->id}.jpg");
+        $this->assertTrue($user->hasRole(UserRole::Admin));
+        $this->assertTrue($user->hasRole(UserRole::Developer));
     }
 
     public function test_authenticated_user_can_logout(): void

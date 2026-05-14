@@ -1,0 +1,164 @@
+{
+    "phases": [
+        {
+            "id": 1,
+            "label": "Current",
+            "title": "Private document vault",
+            "status": "In progress",
+            "sort_order": 1,
+            "is_visible": true,
+            "items": [
+                {
+                    "id": 1,
+                    "title": "Google-only sign in",
+                    "sort_order": 1,
+                    "is_visible": true
+                },
+                {
+                    "id": 2,
+                    "title": "Document upload, preview, download, edit, archive, and delete",
+                    "sort_order": 2,
+                    "is_visible": true
+                },
+                {
+                    "id": 3,
+                    "title": "Categories, tags, search, filters, and sorting",
+                    "sort_order": 3,
+                    "is_visible": true
+                },
+                {
+                    "id": 4,
+                    "title": "Expiry tracking dashboard sections",
+                    "sort_order": 4,
+                    "is_visible": true
+                },
+                {
+                    "id": 5,
+                    "title": "Private local file storage through authorized routes",
+                    "sort_order": 5,
+                    "is_visible": true
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "label": "Next",
+            "title": "Document intelligence and reminders",
+            "status": "Planned",
+            "sort_order": 2,
+            "is_visible": true,
+            "items": [
+                {
+                    "id": 6,
+                    "title": "Email reminders for documents expiring soon",
+                    "sort_order": 1,
+                    "is_visible": true
+                },
+                {
+                    "id": 7,
+                    "title": "Saved filter views for common workflows",
+                    "sort_order": 2,
+                    "is_visible": true
+                },
+                {
+                    "id": 8,
+                    "title": "Bulk document actions",
+                    "sort_order": 3,
+                    "is_visible": true
+                },
+                {
+                    "id": 9,
+                    "title": "Document activity history",
+                    "sort_order": 4,
+                    "is_visible": true
+                },
+                {
+                    "id": 10,
+                    "title": "Improved mobile document preview experience",
+                    "sort_order": 5,
+                    "is_visible": true
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "label": "Later",
+            "title": "Shared household workflows",
+            "status": "Exploring",
+            "sort_order": 3,
+            "is_visible": true,
+            "items": [
+                {
+                    "id": 11,
+                    "title": "Family or household access",
+                    "sort_order": 1,
+                    "is_visible": true
+                },
+                {
+                    "id": 12,
+                    "title": "Shared categories with per-user permissions",
+                    "sort_order": 2,
+                    "is_visible": true
+                },
+                {
+                    "id": 13,
+                    "title": "Document request checklists",
+                    "sort_order": 3,
+                    "is_visible": true
+                },
+                {
+                    "id": 14,
+                    "title": "Emergency access planning",
+                    "sort_order": 4,
+                    "is_visible": true
+                },
+                {
+                    "id": 15,
+                    "title": "Optional cloud storage drivers",
+                    "sort_order": 5,
+                    "is_visible": true
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "label": "Future",
+            "title": "Automation and business use cases",
+            "status": "Long-term",
+            "sort_order": 4,
+            "is_visible": true,
+            "items": [
+                {
+                    "id": 16,
+                    "title": "OCR and extracted metadata",
+                    "sort_order": 1,
+                    "is_visible": true
+                },
+                {
+                    "id": 17,
+                    "title": "AI-assisted document classification",
+                    "sort_order": 2,
+                    "is_visible": true
+                },
+                {
+                    "id": 18,
+                    "title": "Small business workspaces",
+                    "sort_order": 3,
+                    "is_visible": true
+                },
+                {
+                    "id": 19,
+                    "title": "Compliance-oriented review workflows",
+                    "sort_order": 4,
+                    "is_visible": true
+                },
+                {
+                    "id": 20,
+                    "title": "Audit logs and approval flows",
+                    "sort_order": 5,
+                    "is_visible": true
+                }
+            ]
+        }
+    ]
+}

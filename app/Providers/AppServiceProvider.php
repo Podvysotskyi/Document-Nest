@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\UserRole;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\Tag;
@@ -33,5 +34,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Document::class, DocumentPolicy::class);
         Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(Tag::class, TagPolicy::class);
+
+        Gate::define('access-admin', fn (User $user): bool => $user->hasRole(UserRole::Admin));
     }
 }

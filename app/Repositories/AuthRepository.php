@@ -3,32 +3,45 @@
 namespace App\Repositories;
 
 use App\Models\User;
-use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 class AuthRepository
 {
-    public function findOrCreateFromGoogleUser(SocialiteUser $googleUser): User
+    public function findByGoogleIdOrEmail(string $googleId, string $email): ?User
     {
-        $user = User::query()
-            ->where('google_id', $googleUser->getId())
-            ->orWhere('email', $googleUser->getEmail())
+        return User::query()
+            ->where('google_id', $googleId)
+            ->orWhere('email', $email)
             ->first();
+    }
 
-        if ($user === null) {
-            $user = User::query()->create([
-                'google_id' => $googleUser->getId(),
-                'name' => $googleUser->getName() ?? $googleUser->getNickname() ?? $googleUser->getEmail(),
-                'email' => $googleUser->getEmail(),
-                'avatar_url' => $googleUser->getAvatar(),
-            ]);
-        }
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function create(array $attributes): User
+    {
+        return User::query()->create($attributes);
+    }
 
-        $user->forceFill([
-            'google_id' => $googleUser->getId(),
-            'name' => $googleUser->getName() ?? $user->name,
-            'avatar_url' => $googleUser->getAvatar(),
-        ])->save();
+    public function updateAvatarUrl(User $user, string $url): void
+    {
+        $user->forceFill(['avatar_url' => $url])->save();
+    }
 
-        return $user;
+    public function updateGoogleId(User $user, string $googleId): void
+    {
+        $user->forceFill(['google_id' => $googleId])->save();
+    }
+
+    public function isFirstUser(): bool
+    {
+        return User::query()->count() === 1;
+    }
+
+    /**
+     * @param  array<int, int>  $roleIds
+     */
+    public function syncRoles(User $user, array $roleIds): void
+    {
+        $user->roles()->sync($roleIds);
     }
 }

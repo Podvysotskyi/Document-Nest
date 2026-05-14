@@ -17,7 +17,7 @@ class AuthenticationBrowserTest extends DuskTestCase
                 ->assertSee('Sign in to get started')
                 ->clickLink('Sign in to get started')
                 ->assertPathIs('/login')
-                ->assertSee('Sign in to your account')
+                ->assertSee('Sign in to Document Nest')
                 ->assertSee('Continue with Google');
         });
     }

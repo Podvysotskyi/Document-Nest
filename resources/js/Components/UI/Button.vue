@@ -27,6 +27,10 @@ const props = defineProps({
     disabled: Boolean,
 })
 
+const isExternalLink = computed(() => {
+    return Boolean(attrs.target) || /^(https?:)?\/\//.test(props.href ?? '')
+})
+
 const variants = {
     primary: 'bg-zinc-900 text-white hover:bg-zinc-800 disabled:bg-zinc-400',
     secondary: 'bg-white text-zinc-900 border border-zinc-300 hover:bg-zinc-50 disabled:bg-zinc-50 disabled:text-zinc-400',
@@ -50,7 +54,10 @@ const classes = computed(() => {
 </script>
 
 <template>
-    <Link v-if="href" :as="as" :class="[classes, attrs.class]" :disabled="disabled" :href="href" :method="method"
+    <a v-if="href && isExternalLink" :class="[classes, attrs.class]" :href="href" v-bind="attrs">
+        <slot/>
+    </a>
+    <Link v-else-if="href" :as="as" :class="[classes, attrs.class]" :disabled="disabled" :href="href" :method="method"
           v-bind="attrs">
         <slot/>
     </Link>

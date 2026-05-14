@@ -9,28 +9,28 @@ use App\Http\Resources\CategoryResource;
 use App\Http\Resources\DocumentEditResource;
 use App\Http\Resources\TagResource;
 use App\Models\Document;
-use App\Repositories\CategoryRepository;
-use App\Repositories\DocumentRepository;
-use App\Repositories\TagRepository;
+use App\Services\CategoryService;
+use App\Services\DocumentService;
+use App\Services\TagService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class EditDocumentController extends Controller
 {
     public function __construct(
-        private DocumentRepository $documentRepository,
-        private CategoryRepository $categoryRepository,
-        private TagRepository $tagRepository
+        private DocumentService $documentService,
+        private CategoryService $categoryService,
+        private TagService $tagService,
     ) {}
 
     public function __invoke(EditDocumentRequest $request, Document $document): Response
     {
-        $document = $this->documentRepository->loadForShow($document);
+        $document = $this->documentService->loadForShow($document);
 
         return Inertia::render('Documents/Edit', [
             'document' => DocumentEditResource::make($document)->resolve(),
-            'categories' => CategoryResource::collection($this->categoryRepository->listForUser($request->user()))->resolve(),
-            'tags' => TagResource::collection($this->tagRepository->listForUser($request->user()))->resolve(),
+            'categories' => CategoryResource::collection($this->categoryService->listForUser($request->user()))->resolve(),
+            'tags' => TagResource::collection($this->tagService->listForUser($request->user()))->resolve(),
             'statuses' => array_column(DocumentStatus::cases(), 'value'),
         ]);
     }

@@ -2,12 +2,9 @@
 
 namespace App\Repositories;
 
-use App\DTOs\StoreCategoryData;
-use App\DTOs\UpdateCategoryData;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Str;
 
 class CategoryRepository
 {
@@ -39,21 +36,23 @@ class CategoryRepository
             ->get(['id', 'name']);
     }
 
-    public function createForUser(User $user, StoreCategoryData $data): Category
+    /**
+     * @param  array{name: string, slug: string}  $attributes
+     */
+    public function createForUser(User $user, array $attributes): Category
     {
         return Category::query()->create([
             'user_id' => $user->id,
-            'name' => $data->name,
-            'slug' => $this->generateUniqueSlug($user, $data->name),
+            ...$attributes,
         ]);
     }
 
-    public function update(Category $category, UpdateCategoryData $data): Category
+    /**
+     * @param  array{name: string, slug: string}  $attributes
+     */
+    public function update(Category $category, array $attributes): Category
     {
-        $category->update([
-            'name' => $data->name,
-            'slug' => $this->generateUniqueSlug($category->user, $data->name, $category),
-        ]);
+        $category->update($attributes);
 
         return $category;
     }
@@ -63,22 +62,7 @@ class CategoryRepository
         $category->delete();
     }
 
-    private function generateUniqueSlug(User $user, string $name, ?Category $ignore = null): string
-    {
-        $baseSlug = Str::slug($name);
-        $baseSlug = $baseSlug === '' ? 'category' : $baseSlug;
-        $slug = $baseSlug;
-        $suffix = 2;
-
-        while ($this->slugExistsForUser($user, $slug, $ignore)) {
-            $slug = "{$baseSlug}-{$suffix}";
-            $suffix++;
-        }
-
-        return $slug;
-    }
-
-    private function slugExistsForUser(User $user, string $slug, ?Category $ignore = null): bool
+    public function slugExistsForUser(User $user, string $slug, ?Category $ignore = null): bool
     {
         return Category::query()
             ->ownedBy($user)

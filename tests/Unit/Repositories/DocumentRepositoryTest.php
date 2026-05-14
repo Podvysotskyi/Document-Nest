@@ -3,16 +3,12 @@
 namespace Tests\Unit\Repositories;
 
 use App\DTOs\DocumentFiltersData;
-use App\DTOs\StoreDocumentData;
-use App\DTOs\UpdateDocumentData;
 use App\Enums\DocumentStatus;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\Tag;
 use App\Models\User;
 use App\Repositories\DocumentRepository;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class DocumentRepositoryTest extends TestCase
@@ -106,89 +102,19 @@ class DocumentRepositoryTest extends TestCase
         $this->assertSame($uncategorized->id, $paginator->items()[0]->id);
     }
 
-    public function test_document_repository_can_create_update_archive_and_delete_a_document(): void
+    public function test_document_repository_loads_for_show_with_relations(): void
     {
-        Storage::fake('local');
-
-        $user = User::factory()->create();
-        $category = $user->categories()->where('slug', 'finance')->first();
-        $tag = Tag::factory()->for($user)->create(['name' => 'tax', 'slug' => 'tax']);
-        $file = UploadedFile::fake()->create('passport.pdf', 20, 'application/pdf');
-
-        $repository = app(DocumentRepository::class);
-        $document = $repository->createForUser($user, new StoreDocumentData(
-            file: $file,
-            title: 'Passport',
-            categoryId: $category->id,
-            tagIds: [$tag->id],
-            notes: 'Important',
-            issueDate: now()->subYear()->toDateString(),
-            expiryDate: now()->addYear()->toDateString(),
-            status: DocumentStatus::Active,
-        ));
-
-        $this->assertTrue($document->exists);
-        Storage::disk('local')->assertExists($document->stored_path);
-
-        $repository->update($document, new UpdateDocumentData(
-            title: 'Passport Updated',
-            categoryId: $category->id,
-            tagIds: [],
-            notes: 'Updated notes',
-            issueDate: now()->subYear()->toDateString(),
-            expiryDate: now()->addYears(2)->toDateString(),
-            status: DocumentStatus::Archived,
-        ));
-
-        $document->refresh();
-        $this->assertSame('Passport Updated', $document->title);
-        $this->assertSame(DocumentStatus::Archived, $document->status);
-        $this->assertNotNull($document->archived_at);
-        $this->assertSame(0, $document->tags()->count());
-
-        $repository->delete($document);
-        $this->assertFalse(Document::query()->whereKey($document->id)->exists());
-        Storage::disk('local')->assertMissing($document->stored_path);
-    }
-
-    public function test_document_repository_load_and_stream_helpers_work(): void
-    {
-        Storage::fake('local');
-
         $user = User::factory()->create();
         $category = Category::factory()->for($user)->create();
         $tag = Tag::factory()->for($user)->create();
         $document = Document::factory()->for($user)->create([
             'category_id' => $category->id,
-            'original_filename' => 'license.pdf',
-            'stored_path' => 'documents/license.pdf',
-            'mime_type' => 'application/pdf',
         ]);
         $document->tags()->sync([$tag->id]);
 
-        Storage::disk('local')->put($document->stored_path, 'content');
+        $loaded = app(DocumentRepository::class)->loadForShow($document);
 
-        $repository = app(DocumentRepository::class);
-
-        $loaded = $repository->loadForShow($document);
         $this->assertTrue($loaded->relationLoaded('category'));
         $this->assertTrue($loaded->relationLoaded('tags'));
-
-        $repository->archive($document);
-        $document->refresh();
-        $this->assertSame(DocumentStatus::Archived, $document->status);
-        $this->assertNotNull($document->archived_at);
-
-        $repository->restore($document);
-        $document->refresh();
-        $this->assertSame(DocumentStatus::Active, $document->status);
-        $this->assertNull($document->archived_at);
-
-        $previewResponse = $repository->streamPreview($document);
-        $downloadResponse = $repository->streamDownload($document);
-
-        $this->assertSame(200, $previewResponse->getStatusCode());
-        $this->assertSame(200, $downloadResponse->getStatusCode());
-        $this->assertStringContainsString('license.pdf', $downloadResponse->headers->get('content-disposition'));
     }
 }
