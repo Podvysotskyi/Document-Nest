@@ -1,5 +1,5 @@
 # Stage 1: Build PHP dependencies
-FROM dunglas/frankenphp:latest-php8.5-alpine as php-build
+FROM dunglas/frankenphp:php8.5-alpine as php-build
 
 WORKDIR /var/www/html
 
@@ -51,10 +51,12 @@ COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh && \
     chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
+VOLUME ["/var/www/html/storage"]
+
 ENTRYPOINT ["entrypoint.sh"]
 
 # Stage 4: App image (FrankenPHP)
-FROM dunglas/frankenphp:latest-php8.5-alpine as app
+FROM dunglas/frankenphp:php8.5-alpine as app
 
 LABEL maintainer="Serhii Podvysotskyi"
 
