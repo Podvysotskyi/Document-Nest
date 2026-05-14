@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\Tag;
+use App\Models\User;
+use App\Observers\UserObserver;
 use App\Policies\CategoryPolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\TagPolicy;
@@ -26,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        User::observe(UserObserver::class);
+
         Gate::policy(Document::class, DocumentPolicy::class);
         Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(Tag::class, TagPolicy::class);

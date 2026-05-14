@@ -16,6 +16,8 @@ use App\Http\Controllers\Documents\StoreDocumentController;
 use App\Http\Controllers\Documents\UpdateDocumentController;
 use Illuminate\Support\Facades\Route;
 
+Route::view('/', 'welcome');
+
 Route::get('/login', function () {
     return view('auth.login');
 })->middleware('guest')->name('login');
@@ -26,7 +28,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     Route::post('/logout', LogoutController::class)->name('logout');
 

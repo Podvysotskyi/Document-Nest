@@ -29,8 +29,6 @@ class AuthRepository
             'avatar_url' => $googleUser->getAvatar(),
         ])->save();
 
-        $user->ensureDefaultCategories();
-
         return $user;
     }
 }
