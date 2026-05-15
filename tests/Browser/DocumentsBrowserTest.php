@@ -3,6 +3,7 @@
 namespace Tests\Browser;
 
 use App\Models\Document;
+use App\Models\SavedDocumentFilter;
 use App\Models\User;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
@@ -133,5 +134,43 @@ class DocumentsBrowserTest extends DuskTestCase
                 ->waitUntilMissing('[data-testid="mobile-preview-panel"]')
                 ->assertPathIs('/documents/'.$document->id);
         });
+    }
+
+    public function test_authenticated_user_can_save_and_apply_document_filter_view(): void
+    {
+        $user = User::factory()->create();
+        Document::factory()->for($user)->create(['title' => 'Passport Scan']);
+        Document::factory()->for($user)->create(['title' => 'Tax Return']);
+
+        $this->browse(function (Browser $browser) use ($user): void {
+            $browser->loginAs($user)
+                ->visit('/documents')
+                ->waitForText('Documents')
+                ->type('input[placeholder="Search documents..."]', 'Passport')
+                ->waitUntilMissingText('Tax Return')
+                ->type('input[placeholder="Expiring passports"]', 'Passport view')
+                ->press('Save current')
+                ->waitForText('Saved view created.')
+                ->visit('/documents')
+                ->waitForText('Tax Return');
+
+            $browser->script(<<<'JS'
+                const select = document.querySelector('select[name="saved_filter_id"]');
+                const option = Array.from(select.options).find((item) => item.textContent.includes('Passport view'));
+
+                select.value = option.value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            JS
+            );
+
+            $browser->press('Apply')
+                ->waitUntilMissingText('Tax Return')
+                ->assertSee('Passport Scan');
+        });
+
+        $this->assertTrue(SavedDocumentFilter::query()
+            ->where('user_id', $user->id)
+            ->where('name', 'Passport view')
+            ->exists());
     }
 }

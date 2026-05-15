@@ -44,4 +44,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Document::class);
     }
+
+    public function savedDocumentFilters(): HasMany
+    {
+        return $this->hasMany(SavedDocumentFilter::class);
+    }
 }

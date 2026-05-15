@@ -37,6 +37,9 @@ use App\Http\Controllers\Documents\UpdateDocumentController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoadmapController;
+use App\Http\Controllers\SavedDocumentFilters\DestroySavedDocumentFilterController;
+use App\Http\Controllers\SavedDocumentFilters\StoreSavedDocumentFilterController;
+use App\Http\Controllers\SavedDocumentFilters\UpdateSavedDocumentFilterController;
 use App\Http\Controllers\Tags\DestroyTagController;
 use App\Http\Controllers\Tags\IndexTagController;
 use App\Http\Controllers\Tags\StoreTagController;
@@ -93,6 +96,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/documents/{document}/restore', RestoreDocumentController::class)->name('documents.restore');
     Route::get('/documents/{document}/preview', PreviewDocumentController::class)->name('documents.preview');
     Route::get('/documents/{document}/download', DownloadDocumentController::class)->name('documents.download');
+
+    Route::post('/document-filters', StoreSavedDocumentFilterController::class)->name('document-filters.store');
+    Route::patch('/document-filters/{savedDocumentFilter}', UpdateSavedDocumentFilterController::class)->name('document-filters.update');
+    Route::delete('/document-filters/{savedDocumentFilter}', DestroySavedDocumentFilterController::class)->name('document-filters.destroy');
 
     Route::get('/categories', IndexCategoryController::class)->name('categories.index');
     Route::post('/categories', StoreCategoryController::class)->name('categories.store');

@@ -2,7 +2,15 @@
 import {computed, ref, watch} from 'vue'
 import {Head, Link, router, useForm} from '@inertiajs/vue3'
 import debounce from 'lodash/debounce'
-import {ChevronDownIcon, ChevronUpIcon, CloudArrowUpIcon, DocumentIcon} from '@heroicons/vue/24/outline'
+import {
+    BookmarkIcon,
+    ChevronDownIcon,
+    ChevronUpIcon,
+    CloudArrowUpIcon,
+    DocumentIcon,
+    StarIcon,
+    TrashIcon,
+} from '@heroicons/vue/24/outline'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import Button from '../../Components/UI/Button.vue'
 import Badge from '../../Components/UI/Badge.vue'
@@ -13,6 +21,7 @@ import Select from '../../Components/UI/Select.vue'
 const props = defineProps({
     documents: Object,
     filters: Object,
+    savedFilters: Array,
     categories: Array,
     tags: Array,
 })
@@ -32,7 +41,17 @@ const bulkActionForm = useForm({
     document_ids: [],
 })
 
+const savedFilterForm = useForm({
+    name: '',
+    filters: {},
+    sort: '',
+    direction: '',
+    is_default: false,
+})
+
 const selectedDocumentIds = ref([])
+const selectedSavedFilterId = ref('')
+const skipNextFilterApply = ref(false)
 
 const bulkActionRoutes = {
     archive: '/documents/bulk/archive',
@@ -46,6 +65,10 @@ const categoryOptions = [
 ]
 
 const tagOptions = props.tags.map((tag) => ({value: tag.id, label: tag.name}))
+const savedFilterOptions = computed(() => props.savedFilters.map((savedFilter) => ({
+    value: savedFilter.id,
+    label: savedFilter.is_default ? `${ savedFilter.name } (default)` : savedFilter.name,
+})))
 
 const hasActiveFilters = computed(() => {
     return Boolean(form.q || form.category_id || form.tag_id || form.status || form.expiry_from || form.expiry_to)
@@ -60,6 +83,9 @@ const emptyMessage = computed(() => {
 
 const documentsOnPageIds = computed(() => props.documents.data.map((document) => document.id))
 const hasSelectedDocuments = computed(() => selectedDocumentIds.value.length > 0)
+const selectedSavedFilter = computed(() => {
+    return props.savedFilters.find((savedFilter) => savedFilter.id === selectedSavedFilterId.value) ?? null
+})
 const allVisibleSelected = computed(() => {
     if (documentsOnPageIds.value.length === 0) {
         return false
@@ -69,6 +95,30 @@ const allVisibleSelected = computed(() => {
 
     return documentsOnPageIds.value.every((documentId) => selectedIds.has(documentId))
 })
+
+const currentSavedFilterPayload = () => {
+    return {
+        q: form.q,
+        category_id: form.category_id,
+        tag_id: form.tag_id,
+        status: form.status,
+        expiry_from: form.expiry_from,
+        expiry_to: form.expiry_to,
+    }
+}
+
+const savedFilterQuery = (savedFilter) => {
+    return {
+        q: savedFilter.filters?.q || '',
+        category_id: savedFilter.filters?.category_id || '',
+        tag_id: savedFilter.filters?.tag_id || '',
+        status: savedFilter.filters?.status || '',
+        expiry_from: savedFilter.filters?.expiry_from || '',
+        expiry_to: savedFilter.filters?.expiry_to || '',
+        sort: savedFilter.sort || 'newest',
+        direction: savedFilter.direction || '',
+    }
+}
 
 const sortBy = (field) => {
     if (form.sort === field) {
@@ -134,9 +184,75 @@ const submitBulkAction = (action) => {
 }
 
 const applyFilters = () => {
+    if (skipNextFilterApply.value) {
+        skipNextFilterApply.value = false
+        return
+    }
+
     form.get('/documents', {
         preserveState: true,
         replace: true,
+    })
+}
+
+const applySavedFilter = () => {
+    if (!selectedSavedFilter.value) {
+        return
+    }
+
+    const query = savedFilterQuery(selectedSavedFilter.value)
+    skipNextFilterApply.value = true
+
+    Object.assign(form, query)
+
+    router.get('/documents', query, {
+        preserveState: true,
+        replace: true,
+    })
+}
+
+const fillSavedFilterForm = (isDefault = false) => {
+    savedFilterForm.filters = currentSavedFilterPayload()
+    savedFilterForm.sort = form.sort
+    savedFilterForm.direction = form.direction
+    savedFilterForm.is_default = isDefault
+}
+
+const saveCurrentView = () => {
+    fillSavedFilterForm(false)
+
+    savedFilterForm.post('/document-filters', {
+        preserveScroll: true,
+        onSuccess: () => {
+            savedFilterForm.reset()
+            selectedSavedFilterId.value = ''
+        },
+    })
+}
+
+const updateSelectedView = (isDefault = selectedSavedFilter.value?.is_default || false) => {
+    if (!selectedSavedFilter.value) {
+        return
+    }
+
+    fillSavedFilterForm(isDefault)
+
+    savedFilterForm.patch(`/document-filters/${ selectedSavedFilter.value.id }`, {
+        preserveScroll: true,
+    })
+}
+
+const deleteSelectedView = () => {
+    if (!selectedSavedFilter.value || !window.confirm('Delete this saved view?')) {
+        return
+    }
+
+    savedFilterForm.delete(`/document-filters/${ selectedSavedFilter.value.id }`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            savedFilterForm.reset()
+            selectedSavedFilterId.value = ''
+        },
     })
 }
 
@@ -146,6 +262,14 @@ watch(
         applyFilters()
     }, 300),
     {deep: true}
+)
+
+watch(
+    () => selectedSavedFilter.value,
+    (savedFilter) => {
+        savedFilterForm.clearErrors()
+        savedFilterForm.name = savedFilter?.name || ''
+    },
 )
 
 watch(
@@ -172,6 +296,76 @@ watch(
                     Upload Document
                 </Button>
             </header>
+
+            <Card padding="px-4 py-3">
+                <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(15rem,22rem)_auto] lg:items-end">
+                    <Select
+                        v-model="selectedSavedFilterId"
+                        :options="savedFilterOptions"
+                        label="Saved views"
+                        name="saved_filter_id"
+                        placeholder="Choose a saved view"
+                    />
+                    <Input
+                        v-model="savedFilterForm.name"
+                        :error="savedFilterForm.errors.name"
+                        label="View name"
+                        placeholder="Expiring passports"
+                    />
+                    <div class="flex flex-wrap gap-2">
+                        <Button
+                            :disabled="!selectedSavedFilter || savedFilterForm.processing"
+                            size="sm"
+                            variant="secondary"
+                            @click="applySavedFilter"
+                        >
+                            <BookmarkIcon class="mr-1.5 h-4 w-4"/>
+                            Apply
+                        </Button>
+                        <Button
+                            :disabled="!savedFilterForm.name || savedFilterForm.processing"
+                            size="sm"
+                            variant="secondary"
+                            @click="saveCurrentView"
+                        >
+                            <BookmarkIcon class="mr-1.5 h-4 w-4"/>
+                            Save current
+                        </Button>
+                        <Button
+                            :disabled="!selectedSavedFilter || !savedFilterForm.name || savedFilterForm.processing"
+                            size="sm"
+                            variant="secondary"
+                            @click="updateSelectedView()"
+                        >
+                            Rename
+                        </Button>
+                        <Button
+                            :disabled="!selectedSavedFilter || selectedSavedFilter.is_default || savedFilterForm.processing"
+                            size="sm"
+                            variant="ghost"
+                            @click="updateSelectedView(true)"
+                        >
+                            <StarIcon class="mr-1.5 h-4 w-4"/>
+                            Default
+                        </Button>
+                        <Button
+                            :disabled="!selectedSavedFilter || savedFilterForm.processing"
+                            size="sm"
+                            variant="ghost"
+                            @click="deleteSelectedView"
+                        >
+                            <TrashIcon class="mr-1.5 h-4 w-4"/>
+                            Delete
+                        </Button>
+                    </div>
+                </div>
+                <div
+                    v-if="savedFilterForm.errors.filters || savedFilterForm.errors.sort || savedFilterForm.errors.direction"
+                    class="mt-2 text-xs text-red-600"
+                >
+                    The current view has filters that cannot be saved.
+                </div>
+            </Card>
 
             <Card padding="px-4 py-3">
                 <form class="grid gap-3 md:grid-cols-2 xl:grid-cols-7" @submit.prevent>

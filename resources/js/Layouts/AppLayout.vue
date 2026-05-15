@@ -17,6 +17,7 @@ const isAccountMenuOpen = ref(false)
 const accountMenu = ref(null)
 
 const authUser = computed(() => page.props.auth.user)
+const flash = computed(() => page.props.flash ?? {})
 
 const navigationLinks = computed(() => {
     return [
@@ -219,6 +220,20 @@ onBeforeUnmount(() => {
         </header>
 
         <main class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div v-if="flash.success || flash.error" class="mb-6">
+                <div
+                    v-if="flash.success"
+                    class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800"
+                >
+                    {{ flash.success }}
+                </div>
+                <div
+                    v-if="flash.error"
+                    class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800"
+                >
+                    {{ flash.error }}
+                </div>
+            </div>
             <slot />
         </main>
     </div>

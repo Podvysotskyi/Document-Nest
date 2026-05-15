@@ -3,7 +3,6 @@
 This plan covers the next product slice:
 
 - Email reminders for documents expiring soon
-- Saved filter views for common workflows
 - Bulk document actions
 - Document activity history
 - Improved mobile document preview experience
@@ -13,16 +12,14 @@ repository classes for domain behavior, policies for user ownership, Inertia Vue
 focused PHPUnit coverage for every change.
 
 For this slice, document activity history will use MongoDB as a dedicated append-oriented activity store. PostgreSQL
-remains the source of truth for users, documents, categories, tags, reminders, saved filters, and authorization-critical
-data.
+remains the source of truth for users, documents, categories, tags, reminders, and authorization-critical data.
 
 ## Goals
 
 1. Help users act before important documents expire.
-2. Reduce repeated filtering work for common document lists.
-3. Make repeated document maintenance efficient through bulk actions.
-4. Show a useful audit trail for user-visible document changes.
-5. Make document preview usable on mobile screens without breaking private storage.
+2. Make repeated document maintenance efficient through bulk actions.
+3. Show a useful audit trail for user-visible document changes.
+4. Make document preview usable on mobile screens without breaking private storage.
 
 ## Non-Goals
 
@@ -272,67 +269,13 @@ Implement after activity history so reminder sends are traceable.
 - Test `DocumentReminderSent` is dispatched after a reminder is sent.
 - Listener test that the reminder event writes the expected MongoDB activity row.
 
-## Phase 3: Saved Filter Views
-
-Build on the existing `DocumentFiltersData` and documents index query string behavior.
-
-### Data Model
-
-- Add `saved_document_filters` table:
-    - `id` UUID primary key
-    - `user_id` UUID foreign key, cascade delete
-    - `name` string
-    - `filters` JSON
-    - `sort` string nullable
-    - `direction` string nullable
-    - `is_default` boolean default false
-    - timestamps
-    - unique index on `user_id`, `name`
-- Add `SavedDocumentFilter` model with JSON cast and `ownedBy` scope.
-
-### Backend
-
-- Create `SavedDocumentFilterPolicy`.
-- Create Form Requests:
-    - `StoreSavedDocumentFilterRequest`
-    - `UpdateSavedDocumentFilterRequest`
-    - `DestroySavedDocumentFilterRequest`
-    - `ApplySavedDocumentFilterRequest`, if needed
-- Create controllers under `app/Http/Controllers/SavedDocumentFilters`.
-- Add routes under auth:
-    - `POST /document-filters`
-    - `PATCH /document-filters/{savedDocumentFilter}`
-    - `DELETE /document-filters/{savedDocumentFilter}`
-- Reuse `IndexDocumentRequest` validation rules where practical so saved filters cannot store invalid query state.
-- Add service method to normalize filters before persisting.
-- Add repository method to list filters for the current user, ordered by default first and then name.
-
-### Frontend
-
-- Extend `resources/js/Pages/Documents/Index.vue`:
-    - saved views dropdown
-    - "Save current view" action
-    - rename and delete actions
-    - optional "Make default" action
-- Applying a saved view should update the URL query and reload documents.
-- Keep active filter state visible so saved views do not become hidden state.
-- Avoid modal complexity unless inline controls become cramped.
-
-### Tests
-
-- Feature tests for create/update/delete/apply saved filters.
-- Authorization tests for cross-user access.
-- Validation tests for invalid filter payloads.
-- Inertia test that documents index receives saved filters.
-- Browser test for the core workflow: filter documents, save view, apply view.
-
 ## Cross-Cutting Requirements
 
 ### Authorization and Privacy
 
 - Every new route must be inside `auth` middleware.
 - Every document-scoped action must verify ownership through policy or Form Request validation.
-- Saved filters, reminders, and activities must be user-scoped.
+- Reminders and activities must be user-scoped.
 - Do not expose local storage paths to the frontend.
 - MongoDB activity reads must be preceded by PostgreSQL document authorization.
 - MongoDB documents must not store file paths, provider tokens, or other secrets.
@@ -342,7 +285,6 @@ Build on the existing `DocumentFiltersData` and documents index query string beh
 - Add indexes for:
     - `document_reminders.remind_on`
     - `document_reminders.sent_at`
-    - `saved_document_filters.user_id`
 - Add MongoDB collection indexes for activity lookups:
     - `{ document_id: 1, created_at: -1 }`
     - `{ user_id: 1, created_at: -1 }`
@@ -458,7 +400,7 @@ Snapshot rules:
 ### UX Copy
 
 - Keep messages action-oriented and short.
-- Use flash messages for successful bulk actions and saved filter changes.
+- Use flash messages for successful bulk actions.
 - For reminders, make the email subject specific: `Document expiring soon: {title}`.
 
 ### Testing Strategy
@@ -481,9 +423,8 @@ Run the smallest relevant tests while building each feature, then run the full s
 2. Laravel document activity events, queued listener, payload factory, and MongoDB activity writer.
 3. Document activity history show-page UI.
 4. Reminder data model, sync service, scheduled command, email, and reminder activity event.
-5. Saved filter models, routes, and document index controls.
-6. Bulk actions backend, index selection UI, and activity event integration.
-7. Mobile preview refinement and Dusk coverage.
+5. Bulk actions backend, index selection UI, and activity event integration.
+6. Mobile preview refinement and Dusk coverage.
 
 ## Acceptance Checklist
 
@@ -492,7 +433,6 @@ Run the smallest relevant tests while building each feature, then run the full s
 - Queued listeners create MongoDB activity records for document create/update/archive/restore/delete and reminder sends.
 - Users can only view their own document activity.
 - Reminder rows are generated from expiry dates and queued email reminders send once.
-- Saved filter views can be created, applied, renamed, deleted, and scoped per user.
 - Bulk archive, restore, and delete work for selected documents only.
 - Bulk delete removes private local files.
 - Mobile document preview is usable without exposing private file URLs.
