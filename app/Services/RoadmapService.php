@@ -110,7 +110,7 @@ class RoadmapService
 
     public function movePhase(int $phaseId, string $direction): void
     {
-        DB::connection('roadmap')->transaction(function () use ($phaseId, $direction): void {
+        DB::connection('sqlite')->transaction(function () use ($phaseId, $direction): void {
             $phases = RoadmapPhase::query()
                 ->orderBy('sort_order')
                 ->orderBy('id')
@@ -126,7 +126,7 @@ class RoadmapService
 
     public function moveItem(int $itemId, string $direction): void
     {
-        DB::connection('roadmap')->transaction(function () use ($itemId, $direction): void {
+        DB::connection('sqlite')->transaction(function () use ($itemId, $direction): void {
             $item = RoadmapItem::query()->findOrFail($itemId);
             $items = RoadmapItem::query()
                 ->where('roadmap_phase_id', $item->roadmap_phase_id)

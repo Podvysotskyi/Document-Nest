@@ -14,7 +14,7 @@ class RoadmapPhase extends Model
     /** @use HasFactory<RoadmapPhaseFactory> */
     use HasFactory;
 
-    protected $connection = 'roadmap';
+    protected $connection = 'sqlite';
 
     protected static function newFactory(): RoadmapPhaseFactory
     {

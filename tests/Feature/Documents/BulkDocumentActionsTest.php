@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Documents;
 
+use App\Enums\DocumentActivityType;
 use App\Enums\DocumentStatus;
 use App\Events\Documents\DocumentsBulkActionCompleted;
 use App\Models\Document;
@@ -118,8 +119,8 @@ class BulkDocumentActionsTest extends TestCase
         Event::assertDispatchedTimes(DocumentsBulkActionCompleted::class, 1);
         Event::assertDispatched(
             DocumentsBulkActionCompleted::class,
-            fn (DocumentsBulkActionCompleted $event): bool => $event->documentId === $activeDocument->id
-                && $event->type === 'bulk_archived'
+            fn (DocumentsBulkActionCompleted $event): bool => $event->payload->documentId === $activeDocument->id
+                && $event->payload->type === DocumentActivityType::BulkArchived
         );
     }
 }

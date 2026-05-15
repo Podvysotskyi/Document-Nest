@@ -14,7 +14,7 @@ class RoadmapItem extends Model
     /** @use HasFactory<RoadmapItemFactory> */
     use HasFactory;
 
-    protected $connection = 'roadmap';
+    protected $connection = 'sqlite';
 
     protected static function newFactory(): RoadmapItemFactory
     {

@@ -28,9 +28,10 @@
         <env name="DB_DATABASE" value="database/testing.sqlite" force="true"/>
         <env name="DB_FOREIGN_KEYS" value="true" force="true"/>
         <env name="DB_URL" value="" force="true"/>
-        <env name="ROADMAP_DB_DATABASE" value="database/testing-roadmap.sqlite" force="true"/>
         <env name="MAIL_MAILER" value="array" force="true"/>
         <env name="QUEUE_CONNECTION" value="sync" force="true"/>
+        <env name="MONGODB_DSN" value="mongodb://127.0.0.1:27017" force="true"/>
+        <env name="MONGODB_DATABASE" value="document_nest_testing" force="true"/>
         <env name="SESSION_CONNECTION" value="" force="true"/>
         <env name="SESSION_DRIVER" value="array" force="true"/>
         <env name="SESSION_STORE" value="" force="true"/>
@@ -44,7 +45,6 @@
         <server name="DB_DATABASE" value="database/testing.sqlite" force="true"/>
         <server name="DB_FOREIGN_KEYS" value="true" force="true"/>
         <server name="DB_URL" value="" force="true"/>
-        <server name="ROADMAP_DB_DATABASE" value="database/testing-roadmap.sqlite" force="true"/>
         <server name="QUEUE_CONNECTION" value="sync" force="true"/>
         <server name="SESSION_CONNECTION" value="" force="true"/>
         <server name="SESSION_DRIVER" value="array" force="true"/>

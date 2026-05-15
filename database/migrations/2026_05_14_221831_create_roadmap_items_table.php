@@ -6,18 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    protected $connection = 'roadmap';
+    protected $connection = 'sqlite';
 
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        if (Schema::connection('roadmap')->hasTable('roadmap_items')) {
+        if (Schema::connection('sqlite')->hasTable('roadmap_items')) {
             return;
         }
 
-        Schema::connection('roadmap')->create('roadmap_items', function (Blueprint $table) {
+        Schema::connection('sqlite')->create('roadmap_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('roadmap_phase_id')->constrained('roadmap_phases')->cascadeOnDelete();
             $table->string('title');
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::connection('roadmap')->dropIfExists('roadmap_items');
+        Schema::connection('sqlite')->dropIfExists('roadmap_items');
     }
 };

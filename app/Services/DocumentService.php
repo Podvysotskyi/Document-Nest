@@ -6,16 +6,23 @@ use App\DTOs\DocumentFiltersData;
 use App\DTOs\StoreDocumentData;
 use App\DTOs\UpdateDocumentData;
 use App\Enums\DocumentStatus;
+use App\Events\Documents\DocumentArchived;
+use App\Events\Documents\DocumentCreated;
+use App\Events\Documents\DocumentDeleted;
+use App\Events\Documents\DocumentRestored;
+use App\Events\Documents\DocumentUpdated;
 use App\Models\Document;
 use App\Models\User;
 use App\Repositories\DocumentRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class DocumentService
 {
     public function __construct(
         private DocumentRepository $documentRepository,
         private DocumentStorageService $storage,
+        private DocumentActivityPayloadFactory $activityPayloadFactory,
     ) {}
 
     public function paginateForUser(User $user, DocumentFiltersData $filters): LengthAwarePaginator
@@ -65,12 +72,19 @@ class DocumentService
         ]);
 
         $this->documentRepository->syncTags($document, $data->tagIds);
+        $document->setRelation('tags', $document->tags()->get());
+
+        DocumentCreated::dispatch(
+            $this->activityPayloadFactory->forCreated($document, (string) $user->id),
+        );
 
         return $document;
     }
 
     public function update(Document $document, UpdateDocumentData $data): Document
     {
+        $original = $this->activityPayloadFactory->snapshot($document);
+
         $document = $this->documentRepository->update($document, [
             'title' => $data->title,
             'category_id' => $data->categoryId,
@@ -82,29 +96,62 @@ class DocumentService
         ]);
 
         $this->documentRepository->syncTags($document, $data->tagIds);
+        $document->setRelation('tags', $document->tags()->get());
+
+        DocumentUpdated::dispatch(
+            $this->activityPayloadFactory->forUpdated($document, $original, $this->resolveActor($document)),
+        );
 
         return $document;
     }
 
     public function archive(Document $document): Document
     {
-        return $this->documentRepository->update($document, [
+        $original = $this->activityPayloadFactory->snapshot($document);
+
+        $document = $this->documentRepository->update($document, [
             'status' => DocumentStatus::Archived,
             'archived_at' => now(),
         ]);
+
+        DocumentArchived::dispatch(
+            $this->activityPayloadFactory->forArchived($document, $original, $this->resolveActor($document)),
+        );
+
+        return $document;
     }
 
     public function restore(Document $document): Document
     {
-        return $this->documentRepository->update($document, [
+        $original = $this->activityPayloadFactory->snapshot($document);
+
+        $document = $this->documentRepository->update($document, [
             'status' => DocumentStatus::Active,
             'archived_at' => null,
         ]);
+
+        DocumentRestored::dispatch(
+            $this->activityPayloadFactory->forRestored($document, $original, $this->resolveActor($document)),
+        );
+
+        return $document;
     }
 
     public function delete(Document $document): void
     {
+        $original = $this->activityPayloadFactory->snapshot($document);
+        $actorId = $this->resolveActor($document);
+
         $this->storage->delete($document->stored_path);
         $this->documentRepository->delete($document);
+
+        DocumentDeleted::dispatch(
+            $this->activityPayloadFactory->forDeleted($document, $original, $actorId),
+        );
+    }
+
+    private function resolveActor(Document $document): string
+    {
+        return (string) (Auth::id() ?? $document->user_id);
     }
 }

@@ -2,11 +2,13 @@
 
 namespace Tests;
 
+use App\Services\DocumentActivityService;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use RuntimeException;
+use Tests\Support\InMemoryDocumentActivityService;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -14,12 +16,10 @@ abstract class TestCase extends BaseTestCase
 
     private const TEST_DATABASE_FILE = 'testing.sqlite';
 
-    private const TEST_ROADMAP_DATABASE_FILE = 'testing-roadmap.sqlite';
-
     /**
      * @var array<int, string>
      */
-    protected array $connectionsToTransact = ['sqlite', 'roadmap'];
+    protected array $connectionsToTransact = ['sqlite'];
 
     protected bool $seed = true;
 
@@ -34,12 +34,17 @@ abstract class TestCase extends BaseTestCase
         return $app;
     }
 
+    protected InMemoryDocumentActivityService $documentActivityService;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->withoutVite();
         $this->withHeader('Sec-Fetch-Site', 'same-origin');
+
+        $this->documentActivityService = new InMemoryDocumentActivityService;
+        $this->app->instance(DocumentActivityService::class, $this->documentActivityService);
     }
 
     protected function beforeRefreshingDatabase(): void
@@ -52,17 +57,11 @@ abstract class TestCase extends BaseTestCase
             '--database' => 'sqlite',
             '--force' => true,
         ]);
-
-        $this->artisan('db:wipe', [
-            '--database' => 'roadmap',
-            '--force' => true,
-        ]);
     }
 
     private function ensureFileSqliteTestingEnvironment(): void
     {
         self::ensureSqliteDatabaseExists(self::sqliteTestingDatabasePath());
-        self::ensureSqliteDatabaseExists(self::roadmapTestingDatabasePath());
     }
 
     private static function ensureSqliteDatabaseExists(string $databasePath): void
@@ -83,11 +82,6 @@ abstract class TestCase extends BaseTestCase
         return self::databasePath(self::TEST_DATABASE_FILE);
     }
 
-    private static function roadmapTestingDatabasePath(): string
-    {
-        return self::databasePath(self::TEST_ROADMAP_DATABASE_FILE);
-    }
-
     private static function databasePath(string $filename): string
     {
         return dirname(__DIR__).DIRECTORY_SEPARATOR.'database'.DIRECTORY_SEPARATOR.$filename;
@@ -103,16 +97,6 @@ abstract class TestCase extends BaseTestCase
 
         if ($sqliteDatabasePath !== self::sqliteTestingDatabasePath()) {
             throw new RuntimeException('Tests must run against the file-backed sqlite testing database.');
-        }
-
-        $roadmapDatabasePath = self::resolveDatabasePath((string) $app['config']->get('database.connections.roadmap.database'));
-
-        if ($roadmapDatabasePath !== self::roadmapTestingDatabasePath()) {
-            throw new RuntimeException('Tests must run against the file-backed roadmap sqlite testing database.');
-        }
-
-        if ($app['db']->connection('sqlite')->getPdo() === $app['db']->connection('roadmap')->getPdo()) {
-            throw new RuntimeException('Tests must use separate file-backed sqlite databases for app and roadmap connections.');
         }
     }
 

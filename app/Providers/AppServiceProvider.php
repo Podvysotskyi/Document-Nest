@@ -3,6 +3,14 @@
 namespace App\Providers;
 
 use App\Enums\UserRole;
+use App\Events\Documents\DocumentArchived;
+use App\Events\Documents\DocumentCreated;
+use App\Events\Documents\DocumentDeleted;
+use App\Events\Documents\DocumentDownloaded;
+use App\Events\Documents\DocumentRestored;
+use App\Events\Documents\DocumentsBulkActionCompleted;
+use App\Events\Documents\DocumentUpdated;
+use App\Listeners\CreateDocumentActivity;
 use App\Models\Category;
 use App\Models\Document;
 use App\Models\SavedDocumentFilter;
@@ -13,7 +21,7 @@ use App\Policies\CategoryPolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\SavedDocumentFilterPolicy;
 use App\Policies\TagPolicy;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -32,8 +40,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->ensureRoadmapDatabaseExists();
-
         User::observe(UserObserver::class);
 
         Gate::policy(Document::class, DocumentPolicy::class);
@@ -42,20 +48,24 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(SavedDocumentFilter::class, SavedDocumentFilterPolicy::class);
 
         Gate::define('access-admin', fn (User $user): bool => $user->hasRole(UserRole::Admin));
+
+        $this->registerDocumentActivityListeners();
     }
 
-    private function ensureRoadmapDatabaseExists(): void
+    private function registerDocumentActivityListeners(): void
     {
-        $databasePath = config('database.connections.roadmap.database');
+        $events = [
+            DocumentCreated::class,
+            DocumentUpdated::class,
+            DocumentArchived::class,
+            DocumentRestored::class,
+            DocumentDeleted::class,
+            DocumentDownloaded::class,
+            DocumentsBulkActionCompleted::class,
+        ];
 
-        if (! is_string($databasePath) || $databasePath === ':memory:') {
-            return;
-        }
-
-        File::ensureDirectoryExists(dirname($databasePath));
-
-        if (! File::exists($databasePath)) {
-            File::put($databasePath, '');
+        foreach ($events as $event) {
+            Event::listen($event, CreateDocumentActivity::class);
         }
     }
 }

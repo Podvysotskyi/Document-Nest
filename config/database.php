@@ -44,17 +44,6 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
-        'roadmap' => [
-            'driver' => 'sqlite',
-            'database' => env('ROADMAP_DB_DATABASE', database_path('roadmap.sqlite')),
-            'prefix' => '',
-            'foreign_key_constraints' => true,
-            'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
-            'transaction_mode' => 'DEFERRED',
-        ],
-
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
@@ -123,6 +112,12 @@ return [
             'prefix_indexes' => true,
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        ],
+
+        'mongodb' => [
+            'driver' => 'mongodb',
+            'dsn' => env('MONGODB_DSN', 'mongodb://127.0.0.1:27017'),
+            'database' => env('MONGODB_DATABASE', 'document_nest'),
         ],
 
     ],

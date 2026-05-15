@@ -1,6 +1,6 @@
 <script setup>
 import {computed, onBeforeUnmount, ref, watch} from 'vue'
-import {Head, router} from '@inertiajs/vue3'
+import {Deferred, Head, router} from '@inertiajs/vue3'
 import {
     ArchiveBoxIcon,
     ArrowDownTrayIcon,
@@ -20,7 +20,26 @@ const props = defineProps({
     previewUrl: String,
     downloadUrl: String,
     preview: Object,
+    activities: Object,
 })
+
+const dateFormatter = typeof Intl !== 'undefined'
+    ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+    : null
+
+const formatTimestamp = (value) => {
+    if (!value) {
+        return ''
+    }
+
+    const date = new Date(value)
+
+    if (Number.isNaN(date.getTime())) {
+        return value
+    }
+
+    return dateFormatter ? dateFormatter.format(date) : date.toISOString()
+}
 
 const deleting = ref(false)
 const isMobilePreviewOpen = ref(false)
@@ -231,6 +250,34 @@ onBeforeUnmount(() => {
                             </Badge>
                         </div>
                         <p v-else class="text-sm text-zinc-500">No tags assigned.</p>
+                    </Card>
+
+                    <Card data-testid="document-activity" title="Activity">
+                        <Deferred data="activities">
+                            <template #fallback>
+                                <ul class="space-y-3">
+                                    <li v-for="placeholder in 3" :key="placeholder" class="animate-pulse">
+                                        <div class="h-3 w-32 rounded bg-zinc-200"></div>
+                                        <div class="mt-2 h-3 w-48 rounded bg-zinc-100"></div>
+                                    </li>
+                                </ul>
+                            </template>
+
+                            <ol v-if="activities?.data?.length" class="space-y-4">
+                                <li
+                                    v-for="activity in activities.data"
+                                    :key="activity.id"
+                                    class="border-l-2 border-zinc-200 pl-3"
+                                >
+                                    <p class="text-sm font-semibold text-zinc-900">{{ activity.label }}</p>
+                                    <p class="text-xs text-zinc-500">{{ formatTimestamp(activity.created_at) }}</p>
+                                    <p v-if="activity.description" class="mt-1 text-sm text-zinc-600">
+                                        {{ activity.description }}
+                                    </p>
+                                </li>
+                            </ol>
+                            <p v-else class="text-sm text-zinc-500">No activity recorded yet.</p>
+                        </Deferred>
                     </Card>
                 </div>
             </div>
