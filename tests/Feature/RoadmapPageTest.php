@@ -91,8 +91,9 @@ class RoadmapPageTest extends TestCase
     {
         $this->get(route('about'))
             ->assertStatus(200)
-            ->assertSee('About Document Nest')
-            ->assertSee('Privacy first');
+            ->assertSee('About the project')
+            ->assertSee('How privacy works')
+            ->assertSee("What's included today", false);
     }
 
     public function test_license_page_is_publicly_accessible(): void

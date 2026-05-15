@@ -117,6 +117,32 @@
         </div>
     </section>
 
+    <section class="border-b border-zinc-200 bg-white">
+        <div class="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-3 lg:px-8">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-wider text-emerald-700">Why it exists</p>
+                <h2 class="mt-3 text-2xl font-bold tracking-tight text-zinc-950">Personal paperwork should not be
+                    scattered</h2>
+                <p class="mt-3 text-sm leading-6 text-zinc-600">
+                    Most renewal misses do not come from forgetting a document exists. They come from not knowing where
+                    the latest copy lives, when it expires, or whether the version on your laptop is current.
+                </p>
+            </div>
+            <div class="grid gap-4 lg:col-span-2 sm:grid-cols-3">
+                @foreach ([
+                    ['One private place', 'No more searching across email attachments, downloads folders, and photo albums for a passport scan or a renewal letter.'],
+                    ['Renewal-aware', 'Expiry dates are first-class metadata, not a comment buried in a filename. The dashboard surfaces what changes first.'],
+                    ['Quiet by default', 'No notifications you did not ask for, no public links, no shareable URLs. It stays a private vault until you decide otherwise.'],
+                ] as [$title, $copy])
+                    <div class="rounded-lg border border-zinc-200 bg-white p-5">
+                        <h3 class="text-sm font-semibold text-zinc-950">{{ $title }}</h3>
+                        <p class="mt-2 text-sm leading-6 text-zinc-600">{{ $copy }}</p>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
     <section id="overview" class="border-b border-zinc-200 bg-zinc-50">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-3 lg:px-8">
             <div>
@@ -141,7 +167,60 @@
         </div>
     </section>
 
-    <section class="bg-white">
+    <section class="border-b border-zinc-200 bg-white">
+        <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+            <div class="max-w-3xl">
+                <h2 class="text-2xl font-bold tracking-tight text-zinc-950">Features that ship in v1</h2>
+                <p class="mt-3 text-sm leading-6 text-zinc-600">
+                    Each feature is built around a job a single person actually does with personal paperwork — not
+                    around storage volume or generic file management.
+                </p>
+            </div>
+
+            <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ([
+                    [
+                        'label' => 'Upload',
+                        'title' => 'PDFs and images up to 20MB',
+                        'copy' => 'Accept PDF, JPG, PNG, and WebP. Files are stored on a private disk outside the public web root.',
+                    ],
+                    [
+                        'label' => 'Organize',
+                        'title' => 'Categories, tags, and status',
+                        'copy' => 'Group by category, attach tags, and mark documents active or archived without losing history.',
+                    ],
+                    [
+                        'label' => 'Track',
+                        'title' => 'Issue and expiry dates',
+                        'copy' => 'Capture when a document was issued and when it expires. Missing expiry dates show up on the dashboard.',
+                    ],
+                    [
+                        'label' => 'Preview',
+                        'title' => 'Mobile-friendly previews',
+                        'copy' => 'Inline PDF and image preview that works on a phone, served only through authorized routes.',
+                    ],
+                    [
+                        'label' => 'Find',
+                        'title' => 'Search, filter, and sort',
+                        'copy' => 'Search across titles, notes, and original filenames. Filter by category, tags, status, and expiry range.',
+                    ],
+                    [
+                        'label' => 'Maintain',
+                        'title' => 'Bulk actions and archive',
+                        'copy' => 'Archive, restore, or delete multiple documents at once. Restore archived records when circumstances change.',
+                    ],
+                ] as $feature)
+                    <article class="rounded-lg border border-zinc-200 bg-white p-5 shadow-xs">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">{{ $feature['label'] }}</p>
+                        <h3 class="mt-2 text-base font-semibold tracking-tight text-zinc-950">{{ $feature['title'] }}</h3>
+                        <p class="mt-2 text-sm leading-6 text-zinc-600">{{ $feature['copy'] }}</p>
+                    </article>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <section class="border-b border-zinc-200 bg-zinc-50">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-3 lg:px-8">
             <div>
                 <h2 class="text-2xl font-bold tracking-tight text-zinc-950">How the app works</h2>
@@ -165,17 +244,63 @@
             </ol>
         </div>
     </section>
-@endsection
 
-@section('footer')
-    <div
-        class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-        <p>Document Nest &copy; {{ date('Y') }}</p>
-        <div class="flex items-center gap-4">
-            <a class="font-medium text-zinc-600 transition-colors hover:text-zinc-900"
-               href="{{ route('about') }}">About</a>
-            <a class="font-medium text-zinc-600 transition-colors hover:text-zinc-900" href="{{ route('license') }}">License</a>
-            <p>Google-only sign in. Private local storage for v1.</p>
+    <section class="border-b border-zinc-200 bg-zinc-950 text-white">
+        <div class="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-3 lg:px-8">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Trust model</p>
+                <h2 class="mt-3 text-2xl font-bold tracking-tight text-white">Privacy is the default, not a setting</h2>
+                <p class="mt-3 text-sm leading-6 text-zinc-300">
+                    Document Nest treats authorization and storage isolation as baseline requirements. There is no
+                    public sharing surface in v1 — the only way to reach a file is through an authenticated session
+                    that owns it.
+                </p>
+            </div>
+            <div class="grid gap-4 lg:col-span-2 sm:grid-cols-2">
+                @foreach ([
+                    ['User-scoped data', 'Every document, category, and tag belongs to a single account. Queries and policies enforce ownership on every action.'],
+                    ['Private local storage', 'Files live outside the public web root. The frontend never receives raw storage paths or shareable URLs.'],
+                    ['Google sign in only', 'Authentication is delegated to Google via Laravel Socialite. Credentials never live inside the app.'],
+                    ['Open source', 'GPL-3.0 licensed. You can read the source, self-host it, and audit how it handles your records.'],
+                ] as [$title, $copy])
+                    <div class="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
+                        <h3 class="text-sm font-semibold text-white">{{ $title }}</h3>
+                        <p class="mt-2 text-sm leading-6 text-zinc-400">{{ $copy }}</p>
+                    </div>
+                @endforeach
+            </div>
         </div>
-    </div>
+    </section>
+
+    <section class="bg-white">
+        <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <div class="rounded-2xl border border-zinc-200 bg-zinc-50 px-6 py-12 sm:px-12 sm:py-14">
+                <div class="mx-auto max-w-3xl text-center">
+                    <h2 class="text-3xl font-bold tracking-tight text-zinc-950">Start with your most-renewed documents
+                    </h2>
+                    <p class="mt-4 text-base leading-7 text-zinc-600">
+                        Sign in with Google, upload the records you renew most often, and let the dashboard tell you
+                        what is coming up. The rest can move in over time.
+                    </p>
+                    <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                        @auth
+                            <a href="{{ url('/dashboard') }}"
+                               class="inline-flex w-full items-center justify-center rounded-lg bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-zinc-800 sm:w-auto">
+                                Go to Dashboard
+                            </a>
+                        @else
+                            <a href="{{ route('login') }}"
+                               class="inline-flex w-full items-center justify-center rounded-lg bg-zinc-900 px-5 py-3 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-zinc-800 sm:w-auto">
+                                Sign in to get started
+                            </a>
+                        @endauth
+                        <a href="{{ route('about') }}"
+                           class="inline-flex w-full items-center justify-center rounded-lg border border-zinc-300 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-100 sm:w-auto">
+                            Read more about the project
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 @endsection
