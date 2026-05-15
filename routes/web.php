@@ -34,6 +34,7 @@ use App\Http\Controllers\Documents\RestoreDocumentController;
 use App\Http\Controllers\Documents\ShowDocumentController;
 use App\Http\Controllers\Documents\StoreDocumentController;
 use App\Http\Controllers\Documents\UpdateDocumentController;
+use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoadmapController;
 use App\Http\Controllers\Tags\DestroyTagController;
@@ -44,13 +45,12 @@ use App\Http\Middleware\PreventRoadmapAdministrationInProduction;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
+Route::view('/about', 'about')->name('about');
+Route::get('/license', LicenseController::class)->name('license');
 Route::get('/roadmap', RoadmapController::class)->name('roadmap');
 
-Route::get('/login', function () {
-    return view('auth.login');
-})->middleware('guest')->name('login');
-
 Route::middleware('guest')->group(function () {
+    Route::view('/login', 'auth.login')->name('login');
     Route::get('/auth/google/redirect', GoogleRedirectController::class)->name('auth.google.redirect');
     Route::get('/auth/google/callback', GoogleCallbackController::class)->name('auth.google.callback');
 });

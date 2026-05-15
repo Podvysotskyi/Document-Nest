@@ -82,6 +82,26 @@ class RoadmapPageTest extends TestCase
         $this->get('/')
             ->assertStatus(200)
             ->assertSee(route('roadmap'), false)
-            ->assertSee('View roadmap');
+            ->assertSee('View roadmap')
+            ->assertSee(route('about'), false)
+            ->assertSee(route('license'), false);
+    }
+
+    public function test_about_page_is_publicly_accessible(): void
+    {
+        $this->get(route('about'))
+            ->assertStatus(200)
+            ->assertSee('About Document Nest')
+            ->assertSee('Privacy first');
+    }
+
+    public function test_license_page_is_publicly_accessible(): void
+    {
+        $this->get(route('license'))
+            ->assertStatus(200)
+            ->assertSee('License')
+            ->assertSee('GNU General Public License, Version 3')
+            ->assertSee('TERMS AND CONDITIONS')
+            ->assertSee('END OF TERMS AND CONDITIONS');
     }
 }
