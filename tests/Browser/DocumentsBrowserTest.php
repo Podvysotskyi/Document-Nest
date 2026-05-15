@@ -95,7 +95,8 @@ class DocumentsBrowserTest extends DuskTestCase
         ]);
 
         $this->browse(function (Browser $browser) use ($email, $user): void {
-            $browser->loginAs($user)
+            $browser->resize(1280, 800)
+                ->loginAs($user)
                 ->visit('/dashboard')
                 ->assertSee('Dropdown User')
                 ->click('[data-testid="account-menu-button"]')
@@ -154,8 +155,8 @@ class DocumentsBrowserTest extends DuskTestCase
                 ->waitForText('Escape Closes Preview')
                 ->click('[data-testid="mobile-preview-open"]')
                 ->waitFor('[data-testid="mobile-preview-panel"]')
-                ->keys('body', '{escape}')
-                ->waitUntilMissing('[data-testid="mobile-preview-panel"]');
+                ->script('window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));');
+            $browser->waitUntilMissing('[data-testid="mobile-preview-panel"]');
         });
     }
 

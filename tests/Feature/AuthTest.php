@@ -32,7 +32,7 @@ class AuthTest extends TestCase
     {
         $this->get(route('login'))
             ->assertStatus(200)
-            ->assertSee('Sign in to Document Nest')
+            ->assertSeeText('Sign in to Document Nest')
             ->assertSee('License')
             ->assertSee('Developed by');
     }
