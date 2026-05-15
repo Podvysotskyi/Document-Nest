@@ -83,6 +83,18 @@ const emptyMessage = computed(() => {
 
 const documentsOnPageIds = computed(() => props.documents.data.map((document) => document.id))
 const hasSelectedDocuments = computed(() => selectedDocumentIds.value.length > 0)
+const selectedDocuments = computed(() => {
+    const selectedIds = new Set(selectedDocumentIds.value)
+    return props.documents.data.filter((document) => selectedIds.has(document.id))
+})
+const canRestoreSelection = computed(() => {
+    return selectedDocuments.value.length > 0
+        && selectedDocuments.value.every((document) => document.status === 'archived')
+})
+const canArchiveSelection = computed(() => {
+    return selectedDocuments.value.length > 0
+        && selectedDocuments.value.some((document) => document.status !== 'archived')
+})
 const selectedSavedFilter = computed(() => {
     return props.savedFilters.find((savedFilter) => savedFilter.id === selectedSavedFilterId.value) ?? null
 })
@@ -169,7 +181,13 @@ const submitBulkAction = (action) => {
         return
     }
 
-    if (action === 'delete' && !window.confirm('Delete selected documents? This action cannot be undone.')) {
+    const count = selectedDocumentIds.value.length
+
+    if (action === 'delete' && !window.confirm(`Delete ${ count } selected document(s)? This action cannot be undone.`)) {
+        return
+    }
+
+    if (action === 'archive' && count > 3 && !window.confirm(`Archive ${ count } selected documents?`)) {
         return
     }
 
@@ -417,7 +435,7 @@ watch(
                 </form>
             </Card>
 
-            <Card v-if="documents.data.length > 0" padding="px-4 py-3">
+            <Card v-if="documents.data.length > 0" data-testid="bulk-toolbar" padding="px-4 py-3">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div class="flex items-center gap-3">
                         <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700">
@@ -425,16 +443,22 @@ watch(
                                 :checked="allVisibleSelected"
                                 :disabled="bulkActionForm.processing"
                                 class="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                                data-testid="bulk-select-all"
                                 type="checkbox"
                                 @change="toggleAllVisibleRows"
                             >
                             Select visible rows
                         </label>
-                        <span class="text-sm text-zinc-500">{{ selectedDocumentIds.length }} selected</span>
+                        <span
+                            class="text-sm text-zinc-500"
+                            data-testid="bulk-selected-count"
+                        >{{ selectedDocumentIds.length }} selected</span>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <Button
-                            :disabled="!hasSelectedDocuments || bulkActionForm.processing"
+                            v-if="canArchiveSelection"
+                            :disabled="bulkActionForm.processing"
+                            data-testid="bulk-archive"
                             size="sm"
                             variant="secondary"
                             @click="submitBulkAction('archive')"
@@ -442,7 +466,9 @@ watch(
                             Archive
                         </Button>
                         <Button
-                            :disabled="!hasSelectedDocuments || bulkActionForm.processing"
+                            v-if="canRestoreSelection"
+                            :disabled="bulkActionForm.processing"
+                            data-testid="bulk-restore"
                             size="sm"
                             variant="secondary"
                             @click="submitBulkAction('restore')"
@@ -451,11 +477,22 @@ watch(
                         </Button>
                         <Button
                             :disabled="!hasSelectedDocuments || bulkActionForm.processing"
+                            data-testid="bulk-delete"
                             size="sm"
                             variant="danger"
                             @click="submitBulkAction('delete')"
                         >
                             Delete
+                        </Button>
+                        <Button
+                            v-if="hasSelectedDocuments"
+                            :disabled="bulkActionForm.processing"
+                            data-testid="bulk-clear"
+                            size="sm"
+                            variant="ghost"
+                            @click="clearSelection"
+                        >
+                            Clear selection
                         </Button>
                     </div>
                 </div>

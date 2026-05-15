@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\BulkDeleteDocumentsRequest;
 use App\Services\DocumentBulkActionService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
 
 class BulkDeleteDocumentsController extends Controller
 {
@@ -13,8 +14,12 @@ class BulkDeleteDocumentsController extends Controller
 
     public function __invoke(BulkDeleteDocumentsRequest $request): RedirectResponse
     {
-        $this->documentBulkActionService->delete($request->user(), $request->documentIds());
+        $count = $this->documentBulkActionService->delete($request->user(), $request->documentIds());
 
-        return redirect()->route('documents.index');
+        return redirect()
+            ->route('documents.index')
+            ->with('success', $count === 0
+                ? 'No documents were deleted.'
+                : "Deleted {$count} ".Str::plural('document', $count).'.');
     }
 }

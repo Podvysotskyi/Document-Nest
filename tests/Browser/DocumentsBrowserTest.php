@@ -2,6 +2,7 @@
 
 namespace Tests\Browser;
 
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\SavedDocumentFilter;
 use App\Models\User;
@@ -129,10 +130,57 @@ class DocumentsBrowserTest extends DuskTestCase
                 ->assertVisible('[data-testid="mobile-preview-open"]')
                 ->click('[data-testid="mobile-preview-open"]')
                 ->waitFor('[data-testid="mobile-preview-panel"]')
+                ->assertAttribute('[data-testid="mobile-preview-panel"]', 'role', 'dialog')
+                ->assertAttribute('[data-testid="mobile-preview-panel"]', 'aria-modal', 'true')
                 ->assertVisible('[data-testid="mobile-preview-download"]')
                 ->click('[data-testid="mobile-preview-close"]')
                 ->waitUntilMissing('[data-testid="mobile-preview-panel"]')
                 ->assertPathIs('/documents/'.$document->id);
+        });
+    }
+
+    public function test_mobile_preview_panel_closes_with_escape_key(): void
+    {
+        $user = User::factory()->create();
+        $document = Document::factory()->for($user)->create([
+            'title' => 'Escape Closes Preview',
+            'mime_type' => 'application/pdf',
+        ]);
+
+        $this->browse(function (Browser $browser) use ($document, $user): void {
+            $browser->resize(390, 844)
+                ->loginAs($user)
+                ->visit('/documents/'.$document->id)
+                ->waitForText('Escape Closes Preview')
+                ->click('[data-testid="mobile-preview-open"]')
+                ->waitFor('[data-testid="mobile-preview-panel"]')
+                ->keys('body', '{escape}')
+                ->waitUntilMissing('[data-testid="mobile-preview-panel"]');
+        });
+    }
+
+    public function test_mobile_preview_download_link_points_at_authenticated_download_route(): void
+    {
+        $user = User::factory()->create();
+        $document = Document::factory()->for($user)->create([
+            'title' => 'Download From Preview',
+            'mime_type' => 'application/pdf',
+            'stored_path' => 'documents/private-file-path.pdf',
+        ]);
+
+        $this->browse(function (Browser $browser) use ($document, $user): void {
+            $browser->resize(390, 844)
+                ->loginAs($user)
+                ->visit('/documents/'.$document->id)
+                ->waitForText('Download From Preview')
+                ->click('[data-testid="mobile-preview-open"]')
+                ->waitFor('[data-testid="mobile-preview-panel"]')
+                ->assertAttributeContains(
+                    '[data-testid="mobile-preview-download"]',
+                    'href',
+                    '/documents/'.$document->id.'/download',
+                )
+                ->assertSourceMissing('private-file-path.pdf');
         });
     }
 
@@ -172,5 +220,38 @@ class DocumentsBrowserTest extends DuskTestCase
             ->where('user_id', $user->id)
             ->where('name', 'Passport view')
             ->exists());
+    }
+
+    public function test_authenticated_user_can_bulk_archive_selected_documents_from_the_index(): void
+    {
+        $user = User::factory()->create();
+        $first = Document::factory()->for($user)->create([
+            'title' => 'Bulk Archive Alpha',
+            'status' => DocumentStatus::Active,
+            'archived_at' => null,
+        ]);
+        $second = Document::factory()->for($user)->create([
+            'title' => 'Bulk Archive Bravo',
+            'status' => DocumentStatus::Active,
+            'archived_at' => null,
+        ]);
+
+        $this->browse(function (Browser $browser) use ($user): void {
+            $browser->loginAs($user)
+                ->visit('/documents')
+                ->waitForText('Bulk Archive Alpha')
+                ->assertSee('Bulk Archive Bravo')
+                ->check('[data-testid="bulk-select-all"]')
+                ->waitForTextIn('[data-testid="bulk-selected-count"]', '2 selected')
+                ->assertVisible('[data-testid="bulk-archive"]')
+                ->assertVisible('[data-testid="bulk-clear"]')
+                ->assertMissing('[data-testid="bulk-restore"]')
+                ->click('[data-testid="bulk-archive"]')
+                ->waitForText('Archived 2 documents.')
+                ->assertSeeIn('[data-testid="bulk-selected-count"]', '0 selected');
+        });
+
+        $this->assertSame(DocumentStatus::Archived, $first->fresh()?->status);
+        $this->assertSame(DocumentStatus::Archived, $second->fresh()?->status);
     }
 }

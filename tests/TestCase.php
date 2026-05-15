@@ -29,6 +29,8 @@ abstract class TestCase extends BaseTestCase
 
         $app = parent::createApplication();
 
+        $app['config']->set('database.connections.sqlite.database', self::sqliteTestingDatabasePath());
+
         $this->ensureTestingDatabaseIsSafe($app);
 
         return $app;

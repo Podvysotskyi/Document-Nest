@@ -23,6 +23,7 @@ class DocumentService
         private DocumentRepository $documentRepository,
         private DocumentStorageService $storage,
         private DocumentActivityPayloadFactory $activityPayloadFactory,
+        private DocumentReminderService $reminderService,
     ) {}
 
     public function paginateForUser(User $user, DocumentFiltersData $filters): LengthAwarePaginator
@@ -74,6 +75,8 @@ class DocumentService
         $this->documentRepository->syncTags($document, $data->tagIds);
         $document->setRelation('tags', $document->tags()->get());
 
+        $this->reminderService->syncForDocument($document);
+
         DocumentCreated::dispatch(
             $this->activityPayloadFactory->forCreated($document, (string) $user->id),
         );
@@ -98,6 +101,8 @@ class DocumentService
         $this->documentRepository->syncTags($document, $data->tagIds);
         $document->setRelation('tags', $document->tags()->get());
 
+        $this->reminderService->syncForDocument($document);
+
         DocumentUpdated::dispatch(
             $this->activityPayloadFactory->forUpdated($document, $original, $this->resolveActor($document)),
         );
@@ -114,6 +119,8 @@ class DocumentService
             'archived_at' => now(),
         ]);
 
+        $this->reminderService->syncForDocument($document);
+
         DocumentArchived::dispatch(
             $this->activityPayloadFactory->forArchived($document, $original, $this->resolveActor($document)),
         );
@@ -129,6 +136,8 @@ class DocumentService
             'status' => DocumentStatus::Active,
             'archived_at' => null,
         ]);
+
+        $this->reminderService->syncForDocument($document);
 
         DocumentRestored::dispatch(
             $this->activityPayloadFactory->forRestored($document, $original, $this->resolveActor($document)),

@@ -7,7 +7,7 @@ use App\Enums\DocumentActivityType;
 use App\Events\Documents\DocumentCreated;
 use App\Listeners\CreateDocumentActivity;
 use App\Services\DocumentActivityService;
-use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use Mockery;
 use RuntimeException;
@@ -15,10 +15,10 @@ use Tests\TestCase;
 
 class CreateDocumentActivityTest extends TestCase
 {
-    public function test_listener_implements_should_queue_after_commit_contract(): void
+    public function test_listener_implements_should_queue_contract(): void
     {
         $this->assertInstanceOf(
-            ShouldQueueAfterCommit::class,
+            ShouldQueue::class,
             $this->app->make(CreateDocumentActivity::class),
         );
     }

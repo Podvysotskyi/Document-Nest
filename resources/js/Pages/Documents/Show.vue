@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onBeforeUnmount, ref, watch} from 'vue'
+import {computed, nextTick, onBeforeUnmount, ref, watch} from 'vue'
 import {Deferred, Head, router} from '@inertiajs/vue3'
 import {
     ArchiveBoxIcon,
@@ -43,6 +43,7 @@ const formatTimestamp = (value) => {
 
 const deleting = ref(false)
 const isMobilePreviewOpen = ref(false)
+const mobilePreviewCloseRef = ref(null)
 
 const isPreviewable = computed(() => props.preview?.isPreviewable === true)
 const isPdfPreview = computed(() => props.preview?.type === 'pdf')
@@ -93,17 +94,39 @@ const destroyDocument = () => {
     })
 }
 
+const handleMobilePreviewKeydown = (event) => {
+    if (event.key === 'Escape' && isMobilePreviewOpen.value) {
+        event.preventDefault()
+        closeMobilePreview()
+    }
+}
+
 watch(isMobilePreviewOpen, (isOpen) => {
     if (typeof document === 'undefined') {
         return
     }
 
     document.body.style.overflow = isOpen ? 'hidden' : ''
+
+    if (typeof window !== 'undefined') {
+        if (isOpen) {
+            window.addEventListener('keydown', handleMobilePreviewKeydown)
+            nextTick(() => {
+                mobilePreviewCloseRef.value?.focus?.()
+            })
+        } else {
+            window.removeEventListener('keydown', handleMobilePreviewKeydown)
+        }
+    }
 })
 
 onBeforeUnmount(() => {
     if (typeof document !== 'undefined') {
         document.body.style.overflow = ''
+    }
+
+    if (typeof window !== 'undefined') {
+        window.removeEventListener('keydown', handleMobilePreviewKeydown)
     }
 })
 </script>
@@ -252,6 +275,28 @@ onBeforeUnmount(() => {
                         <p v-else class="text-sm text-zinc-500">No tags assigned.</p>
                     </Card>
 
+                    <Card data-testid="document-reminders" title="Reminders">
+                        <div v-if="document.reminders?.upcoming?.length" class="space-y-2">
+                            <p class="text-xs uppercase tracking-wider text-zinc-500">Upcoming</p>
+                            <ul class="space-y-1">
+                                <li
+                                    v-for="reminder in document.reminders.upcoming"
+                                    :key="reminder.id"
+                                    class="text-sm text-zinc-900"
+                                >
+                                    {{ reminder.remind_on }}
+                                </li>
+                            </ul>
+                        </div>
+                        <p v-else class="text-sm text-zinc-500">
+                            No upcoming reminders. Set an expiry date to schedule one.
+                        </p>
+
+                        <p v-if="document.reminders?.last_sent_at" class="mt-3 text-xs text-zinc-500">
+                            Last reminder sent {{ formatTimestamp(document.reminders.last_sent_at) }}.
+                        </p>
+                    </Card>
+
                     <Card data-testid="document-activity" title="Activity">
                         <Deferred data="activities">
                             <template #fallback>
@@ -286,13 +331,21 @@ onBeforeUnmount(() => {
         <Teleport to="body">
             <div
                 v-if="isMobilePreviewOpen"
+                aria-label="Document preview"
+                aria-modal="true"
                 class="fixed inset-0 z-50 bg-zinc-950 sm:hidden"
                 data-testid="mobile-preview-panel"
+                role="dialog"
             >
                 <div class="flex h-full flex-col">
-                    <div class="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
+                    <div
+                        class="flex items-center justify-between border-b border-zinc-800 px-3 py-2"
+                        style="padding-top: max(0.5rem, env(safe-area-inset-top));"
+                    >
                         <button
-                            class="rounded-md p-2 text-zinc-200 hover:bg-zinc-800"
+                            ref="mobilePreviewCloseRef"
+                            aria-label="Close preview"
+                            class="rounded-md p-2 text-zinc-200 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-200"
                             data-testid="mobile-preview-close"
                             type="button"
                             @click="closeMobilePreview"

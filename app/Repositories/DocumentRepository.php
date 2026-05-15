@@ -86,7 +86,11 @@ class DocumentRepository
 
     public function loadForShow(Document $document): Document
     {
-        return $document->load(['category:id,name', 'tags:id,name']);
+        return $document->load([
+            'category:id,name',
+            'tags:id,name',
+            'reminders' => fn ($query) => $query->orderBy('remind_on'),
+        ]);
     }
 
     public function delete(Document $document): void

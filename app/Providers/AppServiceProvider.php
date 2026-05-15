@@ -7,6 +7,7 @@ use App\Events\Documents\DocumentArchived;
 use App\Events\Documents\DocumentCreated;
 use App\Events\Documents\DocumentDeleted;
 use App\Events\Documents\DocumentDownloaded;
+use App\Events\Documents\DocumentReminderSent;
 use App\Events\Documents\DocumentRestored;
 use App\Events\Documents\DocumentsBulkActionCompleted;
 use App\Events\Documents\DocumentUpdated;
@@ -61,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
             DocumentRestored::class,
             DocumentDeleted::class,
             DocumentDownloaded::class,
+            DocumentReminderSent::class,
             DocumentsBulkActionCompleted::class,
         ];
 

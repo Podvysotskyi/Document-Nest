@@ -26,6 +26,7 @@ class BulkDocumentActionsTest extends TestCase
         ]);
 
         $response->assertRedirect(route('documents.index'));
+        $response->assertSessionHas('success', 'Archived 2 documents.');
         $documents->each(function (Document $document): void {
             $freshDocument = $document->fresh();
             $this->assertSame(DocumentStatus::Archived, $freshDocument?->status);
@@ -46,6 +47,7 @@ class BulkDocumentActionsTest extends TestCase
         ]);
 
         $response->assertRedirect(route('documents.index'));
+        $response->assertSessionHas('success', 'Restored 2 documents.');
         $documents->each(function (Document $document): void {
             $freshDocument = $document->fresh();
             $this->assertSame(DocumentStatus::Active, $freshDocument?->status);
@@ -72,10 +74,41 @@ class BulkDocumentActionsTest extends TestCase
         ]);
 
         $response->assertRedirect(route('documents.index'));
+        $response->assertSessionHas('success', 'Deleted 2 documents.');
         $this->assertDatabaseMissing('documents', ['id' => $firstDocument->id]);
         $this->assertDatabaseMissing('documents', ['id' => $secondDocument->id]);
         Storage::disk('local')->assertMissing('documents/first.pdf');
         Storage::disk('local')->assertMissing('documents/second.pdf');
+    }
+
+    public function test_bulk_archive_singular_message_uses_singular_noun(): void
+    {
+        $user = User::factory()->create();
+        $document = Document::factory()->for($user)->create([
+            'status' => DocumentStatus::Active,
+            'archived_at' => null,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('documents.bulk.archive'), [
+            'document_ids' => [$document->id],
+        ]);
+
+        $response->assertSessionHas('success', 'Archived 1 document.');
+    }
+
+    public function test_bulk_archive_message_handles_zero_changes(): void
+    {
+        $user = User::factory()->create();
+        $document = Document::factory()->for($user)->create([
+            'status' => DocumentStatus::Archived,
+            'archived_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->post(route('documents.bulk.archive'), [
+            'document_ids' => [$document->id],
+        ]);
+
+        $response->assertSessionHas('success', 'No documents needed archiving.');
     }
 
     public function test_bulk_document_actions_reject_document_ids_from_another_user(): void

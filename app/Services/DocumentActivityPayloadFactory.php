@@ -114,6 +114,29 @@ class DocumentActivityPayloadFactory
     /**
      * @param  array<string, mixed>  $context
      */
+    public function forReminderSent(Document $document, string $remindOn, ?string $reminderId = null, array $context = []): DocumentActivityPayload
+    {
+        $metadata = array_merge($context, [
+            'remind_on' => $remindOn,
+            'expiry_date' => $document->expiry_date?->toDateString(),
+        ]);
+
+        if ($reminderId !== null) {
+            $metadata['reminder_id'] = $reminderId;
+        }
+
+        return $this->build(
+            document: $document,
+            actorId: (string) $document->user_id,
+            type: DocumentActivityType::ReminderSent,
+            description: 'Expiry reminder email sent',
+            metadata: $metadata,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
     public function forDownloaded(Document $document, string $actorId, array $context = []): DocumentActivityPayload
     {
         return $this->build(
