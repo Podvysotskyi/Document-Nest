@@ -14,6 +14,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mongodb:
+        condition: service_healthy
     networks:
       - backend
       - edge
@@ -27,7 +29,7 @@ services:
   scheduler:
     image: document-nest/app:latest
     restart: unless-stopped
-    command: [ "php", "artisan", "schedule:work" ]
+    command: [ "php", "artisan", "horizon" ]
     volumes:
       - public_storage:/var/www/html/storage/app/public
       - private_storage:/var/www/html/storage/app/private
@@ -37,6 +39,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
     networks:
       - backend
@@ -54,6 +58,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
     networks:
       - backend
@@ -92,6 +98,19 @@ services:
       timeout: 5s
       retries: 5
 
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - backend
+    healthcheck:
+      test: [ 'CMD', 'mongosh', '--quiet', '--eval', "db.runCommand({ ping: 1 }).ok" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   cloudflared:
     image: cloudflare/cloudflared:2026.5.0
     restart: unless-stopped
@@ -111,3 +130,4 @@ volumes:
   private_storage:
   postgres_data:
   redis_data:
+  mongodb_data:
