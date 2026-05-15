@@ -51,8 +51,7 @@ COPY --from=node-build /var/www/html/public/build ./public/build
 
 # Copy entrypoint
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh && \
-    chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod +x /usr/local/bin/entrypoint.sh # && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 VOLUME ["/var/www/html/storage/app/private", "/var/www/html/storage/app/public"]
 
