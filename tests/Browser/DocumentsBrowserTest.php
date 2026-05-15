@@ -86,7 +86,7 @@ class DocumentsBrowserTest extends DuskTestCase
 
     public function test_authenticated_user_can_use_account_dropdown(): void
     {
-        $email = 'dropdown-'.uniqid().'@example.com';
+        $email = fake()->safeEmail();
         $user = User::factory()->create([
             'name' => 'Dropdown User',
             'email' => $email,
@@ -109,6 +109,29 @@ class DocumentsBrowserTest extends DuskTestCase
                 ->press('Logout')
                 ->waitForLocation('/login')
                 ->assertGuest();
+        });
+    }
+
+    public function test_authenticated_user_can_open_and_close_mobile_document_preview_panel(): void
+    {
+        $user = User::factory()->create();
+        $document = Document::factory()->for($user)->create([
+            'title' => 'Mobile Preview Document',
+            'mime_type' => 'application/pdf',
+        ]);
+
+        $this->browse(function (Browser $browser) use ($document, $user): void {
+            $browser->resize(390, 844)
+                ->loginAs($user)
+                ->visit('/documents/'.$document->id)
+                ->waitForText('Mobile Preview Document')
+                ->assertVisible('[data-testid="mobile-preview-open"]')
+                ->click('[data-testid="mobile-preview-open"]')
+                ->waitFor('[data-testid="mobile-preview-panel"]')
+                ->assertVisible('[data-testid="mobile-preview-download"]')
+                ->click('[data-testid="mobile-preview-close"]')
+                ->waitUntilMissing('[data-testid="mobile-preview-panel"]')
+                ->assertPathIs('/documents/'.$document->id);
         });
     }
 }

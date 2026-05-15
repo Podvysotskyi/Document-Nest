@@ -22,6 +22,7 @@ class ShowDocumentController extends Controller
             'document' => DocumentDetailResource::make($document)->resolve(),
             'previewUrl' => route('documents.preview', $document),
             'downloadUrl' => route('documents.download', $document),
+            'preview' => $this->documentService->resolvePreviewCapability($document),
         ]);
     }
 }

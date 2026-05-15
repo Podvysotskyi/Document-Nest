@@ -179,6 +179,40 @@ class DocumentManagementTest extends TestCase
             ->where('document.tags.0.name', 'Important')
             ->has('previewUrl')
             ->has('downloadUrl')
+            ->where('preview.isPreviewable', true)
+            ->where('preview.type', 'pdf')
+        );
+    }
+
+    public function test_document_show_marks_image_files_as_previewable(): void
+    {
+        $user = User::factory()->create();
+        $document = Document::factory()->for($user)->create([
+            'mime_type' => 'image/png',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('documents.show', $document));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Documents/Show')
+            ->where('preview.isPreviewable', true)
+            ->where('preview.type', 'image')
+        );
+    }
+
+    public function test_document_show_marks_unsupported_files_as_not_previewable(): void
+    {
+        $user = User::factory()->create();
+        $document = Document::factory()->for($user)->create([
+            'mime_type' => 'application/zip',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('documents.show', $document));
+
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('Documents/Show')
+            ->where('preview.isPreviewable', false)
+            ->where('preview.type', 'unsupported')
         );
     }
 
@@ -277,6 +311,7 @@ class DocumentManagementTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringContainsString('inline', (string) $response->headers->get('Content-Disposition'));
     }
 
     public function test_authenticated_user_can_download_a_document(): void

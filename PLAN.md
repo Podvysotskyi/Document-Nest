@@ -326,38 +326,6 @@ Build on the existing `DocumentFiltersData` and documents index query string beh
 - Inertia test that documents index receives saved filters.
 - Browser test for the core workflow: filter documents, save view, apply view.
 
-## Phase 5: Improved Mobile Document Preview
-
-This is intentionally last because it should not disturb storage or authorization behavior.
-
-### Backend
-
-- Keep existing `documents.preview` route as the private authorized source.
-- Add response headers only if needed for mobile display:
-    - preserve correct `Content-Type`
-    - allow inline preview
-    - keep download route attachment behavior separate
-- Consider a preview capability prop:
-    - PDF and image mime types are previewable
-    - other mime types show a download-first state
-
-### Frontend
-
-- Rework `resources/js/Pages/Documents/Show.vue` preview area:
-    - On desktop, keep a large inline preview.
-    - On mobile, use a dedicated preview action that opens a full-screen preview panel.
-    - Provide explicit close, download, and edit actions.
-    - For images, use responsive image containment.
-    - For PDFs, use iframe/object fallback with a clear download option.
-- Ensure the details and actions remain reachable without excessive scrolling.
-- Avoid loading heavy preview UI on the index page.
-
-### Tests
-
-- Feature tests for preview authorization remain in place.
-- Add browser test for mobile document preview open/close and download link visibility.
-- Check browser logs after Dusk run.
-
 ## Cross-Cutting Requirements
 
 ### Authorization and Privacy

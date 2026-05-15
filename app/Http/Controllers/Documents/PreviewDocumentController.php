@@ -14,6 +14,6 @@ class PreviewDocumentController extends Controller
 
     public function __invoke(PreviewDocumentRequest $request, Document $document): StreamedResponse
     {
-        return $this->storage->streamPreview($document->stored_path, $document->mime_type);
+        return $this->storage->streamPreview($document->stored_path, $document->mime_type, $document->original_filename);
     }
 }
