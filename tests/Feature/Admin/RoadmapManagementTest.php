@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Models\Roadmap\RoadmapItem;
-use App\Models\Roadmap\RoadmapPhase;
+use App\Models\Sqlite\RoadmapItem;
+use App\Models\Sqlite\RoadmapPhase;
 use App\Models\User;
 use App\Services\RoadmapService;
 use Inertia\Testing\AssertableInertia as Assert;

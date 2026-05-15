@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Roadmap\RoadmapPhase;
+use App\Models\Sqlite\RoadmapPhase;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

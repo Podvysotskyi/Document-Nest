@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Roadmap\RoadmapItem;
-use App\Models\Roadmap\RoadmapPhase;
+use App\Models\Sqlite\RoadmapItem;
+use App\Models\Sqlite\RoadmapPhase;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

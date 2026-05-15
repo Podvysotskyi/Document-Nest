@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Roadmap;
+namespace App\Models\Sqlite;
 
 use Database\Factories\RoadmapPhaseFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
