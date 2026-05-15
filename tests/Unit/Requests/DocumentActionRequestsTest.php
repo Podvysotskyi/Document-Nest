@@ -4,6 +4,9 @@ namespace Tests\Unit\Requests;
 
 use App\Enums\DocumentStatus;
 use App\Http\Requests\ArchiveDocumentRequest;
+use App\Http\Requests\BulkArchiveDocumentsRequest;
+use App\Http\Requests\BulkDeleteDocumentsRequest;
+use App\Http\Requests\BulkRestoreDocumentsRequest;
 use App\Http\Requests\CreateDocumentRequest;
 use App\Http\Requests\DestroyDocumentRequest;
 use App\Http\Requests\DownloadDocumentRequest;
@@ -60,6 +63,20 @@ class DocumentActionRequestsTest extends TestCase
             $otherRequest->setUserResolver(fn () => $other);
             $this->bindDocumentRoute($otherRequest, $document);
             $this->assertFalse($otherRequest->authorize());
+        }
+    }
+
+    public function test_bulk_document_action_requests_expose_document_id_rules(): void
+    {
+        $user = User::factory()->create();
+
+        foreach ([BulkArchiveDocumentsRequest::class, BulkRestoreDocumentsRequest::class, BulkDeleteDocumentsRequest::class] as $requestClass) {
+            $request = new $requestClass;
+            $request->setUserResolver(fn () => $user);
+
+            $this->assertTrue($request->authorize());
+            $this->assertArrayHasKey('document_ids', $request->rules());
+            $this->assertArrayHasKey('document_ids.*', $request->rules());
         }
     }
 

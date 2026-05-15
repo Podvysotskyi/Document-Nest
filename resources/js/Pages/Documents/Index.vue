@@ -1,5 +1,5 @@
 <script setup>
-import {computed, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import {Head, Link, router, useForm} from '@inertiajs/vue3'
 import debounce from 'lodash/debounce'
 import {ChevronDownIcon, ChevronUpIcon, CloudArrowUpIcon, DocumentIcon} from '@heroicons/vue/24/outline'
@@ -28,6 +28,18 @@ const form = useForm({
     direction: props.filters.direction || '',
 })
 
+const bulkActionForm = useForm({
+    document_ids: [],
+})
+
+const selectedDocumentIds = ref([])
+
+const bulkActionRoutes = {
+    archive: '/documents/bulk/archive',
+    restore: '/documents/bulk/restore',
+    delete: '/documents/bulk/delete',
+}
+
 const categoryOptions = [
     {value: 'uncategorized', label: 'Uncategorized'},
     ...props.categories.map((category) => ({value: category.id, label: category.name})),
@@ -44,6 +56,18 @@ const emptyMessage = computed(() => {
     return hasActiveFilters.value
         ? 'Adjust your filters or search terms to see more results.'
         : 'Upload your first document to start building your private library.'
+})
+
+const documentsOnPageIds = computed(() => props.documents.data.map((document) => document.id))
+const hasSelectedDocuments = computed(() => selectedDocumentIds.value.length > 0)
+const allVisibleSelected = computed(() => {
+    if (documentsOnPageIds.value.length === 0) {
+        return false
+    }
+
+    const selectedIds = new Set(selectedDocumentIds.value)
+
+    return documentsOnPageIds.value.every((documentId) => selectedIds.has(documentId))
 })
 
 const sortBy = (field) => {
@@ -68,6 +92,47 @@ const getStatusVariant = (status) => {
     }
 }
 
+const toggleDocumentSelection = (documentId) => {
+    if (selectedDocumentIds.value.includes(documentId)) {
+        selectedDocumentIds.value = selectedDocumentIds.value.filter((id) => id !== documentId)
+        return
+    }
+
+    selectedDocumentIds.value = [...selectedDocumentIds.value, documentId]
+}
+
+const toggleAllVisibleRows = () => {
+    if (allVisibleSelected.value) {
+        selectedDocumentIds.value = []
+        return
+    }
+
+    selectedDocumentIds.value = [...documentsOnPageIds.value]
+}
+
+const clearSelection = () => {
+    selectedDocumentIds.value = []
+}
+
+const submitBulkAction = (action) => {
+    if (!hasSelectedDocuments.value || bulkActionForm.processing) {
+        return
+    }
+
+    if (action === 'delete' && !window.confirm('Delete selected documents? This action cannot be undone.')) {
+        return
+    }
+
+    bulkActionForm.document_ids = [...selectedDocumentIds.value]
+
+    bulkActionForm.post(bulkActionRoutes[action], {
+        preserveScroll: true,
+        onSuccess: () => {
+            clearSelection()
+        },
+    })
+}
+
 const applyFilters = () => {
     form.get('/documents', {
         preserveState: true,
@@ -81,6 +146,14 @@ watch(
         applyFilters()
     }, 300),
     {deep: true}
+)
+
+watch(
+    () => documentsOnPageIds.value,
+    (visibleDocumentIds) => {
+        const visibleIds = new Set(visibleDocumentIds)
+        selectedDocumentIds.value = selectedDocumentIds.value.filter((documentId) => visibleIds.has(documentId))
+    },
 )
 </script>
 
@@ -150,6 +223,50 @@ watch(
                 </form>
             </Card>
 
+            <Card v-if="documents.data.length > 0" padding="px-4 py-3">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-center gap-3">
+                        <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-zinc-700">
+                            <input
+                                :checked="allVisibleSelected"
+                                :disabled="bulkActionForm.processing"
+                                class="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                                type="checkbox"
+                                @change="toggleAllVisibleRows"
+                            >
+                            Select visible rows
+                        </label>
+                        <span class="text-sm text-zinc-500">{{ selectedDocumentIds.length }} selected</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <Button
+                            :disabled="!hasSelectedDocuments || bulkActionForm.processing"
+                            size="sm"
+                            variant="secondary"
+                            @click="submitBulkAction('archive')"
+                        >
+                            Archive
+                        </Button>
+                        <Button
+                            :disabled="!hasSelectedDocuments || bulkActionForm.processing"
+                            size="sm"
+                            variant="secondary"
+                            @click="submitBulkAction('restore')"
+                        >
+                            Restore
+                        </Button>
+                        <Button
+                            :disabled="!hasSelectedDocuments || bulkActionForm.processing"
+                            size="sm"
+                            variant="danger"
+                            @click="submitBulkAction('delete')"
+                        >
+                            Delete
+                        </Button>
+                    </div>
+                </div>
+            </Card>
+
             <Card padding="p-0">
                 <div class="relative">
                     <div
@@ -162,36 +279,49 @@ watch(
                     <div
                         :class="['divide-y divide-zinc-100 md:hidden transition-opacity', form.processing ? 'opacity-60' : 'opacity-100']"
                     >
-                        <button
+                        <div
                             v-for="document in documents.data"
                             :key="document.id"
-                            class="block w-full px-4 py-4 text-left transition-colors hover:bg-zinc-50"
-                            type="button"
-                            @click="router.visit(`/documents/${document.id}`)"
+                            class="flex items-start gap-3 px-4 py-4 transition-colors hover:bg-zinc-50"
                         >
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="min-w-0">
-                                    <p class="truncate text-sm font-semibold text-zinc-900">{{ document.title }}</p>
-                                    <p class="mt-1 text-xs text-zinc-500">Updated {{ document.updated_at }}</p>
-                                </div>
-                                <Badge :variant="getStatusVariant(document.status)">
-                                    {{ document.status }}
-                                </Badge>
-                            </div>
-                            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                                <Badge v-if="document.category" variant="neutral">
-                                    {{ document.category.name }}
-                                </Badge>
-                                <span v-else class="rounded-full bg-zinc-100 px-2 py-0.5 font-medium text-zinc-500">
-                                    Uncategorized
-                                </span>
-                                <span
-                                    :class="document.status === 'expired' ? 'font-medium text-red-600' : 'text-zinc-500'"
+                            <div class="pt-0.5">
+                                <input
+                                    :checked="selectedDocumentIds.includes(document.id)"
+                                    :disabled="bulkActionForm.processing"
+                                    class="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                                    type="checkbox"
+                                    @change="toggleDocumentSelection(document.id)"
                                 >
-                                    Expiry {{ document.expiry_date ?? 'not set' }}
-                                </span>
                             </div>
-                        </button>
+                            <button
+                                class="block w-full text-left"
+                                type="button"
+                                @click="router.visit(`/documents/${document.id}`)"
+                            >
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <p class="truncate text-sm font-semibold text-zinc-900">{{ document.title }}</p>
+                                        <p class="mt-1 text-xs text-zinc-500">Updated {{ document.updated_at }}</p>
+                                    </div>
+                                    <Badge :variant="getStatusVariant(document.status)">
+                                        {{ document.status }}
+                                    </Badge>
+                                </div>
+                                <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                                    <Badge v-if="document.category" variant="neutral">
+                                        {{ document.category.name }}
+                                    </Badge>
+                                    <span v-else class="rounded-full bg-zinc-100 px-2 py-0.5 font-medium text-zinc-500">
+                                        Uncategorized
+                                    </span>
+                                    <span
+                                        :class="document.status === 'expired' ? 'font-medium text-red-600' : 'text-zinc-500'"
+                                    >
+                                        Expiry {{ document.expiry_date ?? 'not set' }}
+                                    </span>
+                                </div>
+                            </button>
+                        </div>
 
                         <div v-if="documents.data.length === 0" class="px-4 py-12 text-center text-zinc-500">
                             <div class="flex flex-col items-center gap-2">
@@ -208,6 +338,15 @@ watch(
                     <table class="w-full text-left text-sm text-zinc-900">
                         <thead class="bg-zinc-50/50 text-xs font-semibold uppercase tracking-wider text-zinc-500">
                         <tr>
+                            <th class="px-4 py-4">
+                                <input
+                                    :checked="allVisibleSelected"
+                                    :disabled="bulkActionForm.processing"
+                                    class="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                                    type="checkbox"
+                                    @change="toggleAllVisibleRows"
+                                >
+                            </th>
                             <th class="px-6 py-4 cursor-pointer hover:text-zinc-900 transition-colors"
                                 @click="sortBy('title')">
                                 <div class="flex items-center gap-1">
@@ -257,6 +396,15 @@ watch(
                             class="group cursor-pointer hover:bg-zinc-50/50 transition-colors"
                             @click="router.visit(`/documents/${document.id}`)"
                         >
+                            <td class="px-4 py-4" @click.stop>
+                                <input
+                                    :checked="selectedDocumentIds.includes(document.id)"
+                                    :disabled="bulkActionForm.processing"
+                                    class="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-900"
+                                    type="checkbox"
+                                    @change="toggleDocumentSelection(document.id)"
+                                >
+                            </td>
                             <td class="px-6 py-4">
                                 <div class="font-semibold text-zinc-900 group-hover:text-zinc-600">
                                     {{ document.title }}
@@ -282,7 +430,7 @@ watch(
                             </td>
                         </tr>
                         <tr v-if="documents.data.length === 0">
-                            <td class="px-6 py-12 text-center text-zinc-500" colspan="4">
+                            <td class="px-6 py-12 text-center text-zinc-500" colspan="5">
                                 <div class="flex flex-col items-center gap-2">
                                     <DocumentIcon class="h-9 w-9 text-zinc-300"/>
                                     <p class="font-semibold text-zinc-700">{{ emptyTitle }}</p>
