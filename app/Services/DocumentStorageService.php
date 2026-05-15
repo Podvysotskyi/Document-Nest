@@ -18,11 +18,16 @@ class DocumentStorageService
         Storage::disk('local')->delete($storedPath);
     }
 
-    public function streamPreview(string $storedPath, string $mimeType): StreamedResponse
+    public function streamPreview(string $storedPath, string $mimeType, string $originalFilename): StreamedResponse
     {
+        $safeFilename = str_replace('"', '', basename($originalFilename));
+
         return Storage::disk('local')->response(
             $storedPath,
-            headers: ['Content-Type' => $mimeType],
+            headers: [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => "inline; filename=\"{$safeFilename}\"",
+            ],
         );
     }
 

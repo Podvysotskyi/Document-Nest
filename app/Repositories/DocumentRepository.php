@@ -6,6 +6,7 @@ use App\DTOs\DocumentFiltersData;
 use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class DocumentRepository
@@ -91,5 +92,17 @@ class DocumentRepository
     public function delete(Document $document): void
     {
         $document->delete();
+    }
+
+    /**
+     * @param  array<int, string>  $documentIds
+     * @return Collection<int, Document>
+     */
+    public function findOwnedByIds(User $user, array $documentIds): Collection
+    {
+        return Document::query()
+            ->ownedBy($user)
+            ->whereIn('id', array_values(array_unique($documentIds)))
+            ->get();
     }
 }

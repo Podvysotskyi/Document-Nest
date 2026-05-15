@@ -82,4 +82,27 @@ class DocumentServiceTest extends TestCase
         $this->assertSame(DocumentStatus::Active, $document->status);
         $this->assertNull($document->archived_at);
     }
+
+    public function test_document_service_resolves_preview_capability_from_mime_type(): void
+    {
+        $service = app(DocumentService::class);
+        $user = User::factory()->create();
+
+        $pdfDocument = Document::factory()->for($user)->create(['mime_type' => 'application/pdf']);
+        $imageDocument = Document::factory()->for($user)->create(['mime_type' => 'image/jpeg']);
+        $unsupportedDocument = Document::factory()->for($user)->create(['mime_type' => 'application/zip']);
+
+        $this->assertSame(
+            ['isPreviewable' => true, 'type' => 'pdf'],
+            $service->resolvePreviewCapability($pdfDocument)
+        );
+        $this->assertSame(
+            ['isPreviewable' => true, 'type' => 'image'],
+            $service->resolvePreviewCapability($imageDocument)
+        );
+        $this->assertSame(
+            ['isPreviewable' => false, 'type' => 'unsupported'],
+            $service->resolvePreviewCapability($unsupportedDocument)
+        );
+    }
 }

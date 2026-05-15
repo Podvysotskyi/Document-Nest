@@ -21,6 +21,9 @@ use App\Http\Controllers\Categories\StoreCategoryController;
 use App\Http\Controllers\Categories\UpdateCategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Documents\ArchiveDocumentController;
+use App\Http\Controllers\Documents\BulkArchiveDocumentsController;
+use App\Http\Controllers\Documents\BulkDeleteDocumentsController;
+use App\Http\Controllers\Documents\BulkRestoreDocumentsController;
 use App\Http\Controllers\Documents\CreateDocumentController;
 use App\Http\Controllers\Documents\DestroyDocumentController;
 use App\Http\Controllers\Documents\DownloadDocumentController;
@@ -31,6 +34,7 @@ use App\Http\Controllers\Documents\RestoreDocumentController;
 use App\Http\Controllers\Documents\ShowDocumentController;
 use App\Http\Controllers\Documents\StoreDocumentController;
 use App\Http\Controllers\Documents\UpdateDocumentController;
+use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoadmapController;
 use App\Http\Controllers\Tags\DestroyTagController;
@@ -41,13 +45,12 @@ use App\Http\Middleware\PreventRoadmapAdministrationInProduction;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
+Route::view('/about', 'about')->name('about');
+Route::get('/license', LicenseController::class)->name('license');
 Route::get('/roadmap', RoadmapController::class)->name('roadmap');
 
-Route::get('/login', function () {
-    return view('auth.login');
-})->middleware('guest')->name('login');
-
 Route::middleware('guest')->group(function () {
+    Route::view('/login', 'auth.login')->name('login');
     Route::get('/auth/google/redirect', GoogleRedirectController::class)->name('auth.google.redirect');
     Route::get('/auth/google/callback', GoogleCallbackController::class)->name('auth.google.callback');
 });
@@ -79,6 +82,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/documents', IndexDocumentController::class)->name('documents.index');
     Route::get('/documents/create', CreateDocumentController::class)->name('documents.create');
     Route::post('/documents', StoreDocumentController::class)->name('documents.store');
+    Route::post('/documents/bulk/archive', BulkArchiveDocumentsController::class)->name('documents.bulk.archive');
+    Route::post('/documents/bulk/restore', BulkRestoreDocumentsController::class)->name('documents.bulk.restore');
+    Route::post('/documents/bulk/delete', BulkDeleteDocumentsController::class)->name('documents.bulk.delete');
     Route::get('/documents/{document}', ShowDocumentController::class)->name('documents.show');
     Route::get('/documents/{document}/edit', EditDocumentController::class)->name('documents.edit');
     Route::match(['put', 'patch'], '/documents/{document}', UpdateDocumentController::class)->name('documents.update');

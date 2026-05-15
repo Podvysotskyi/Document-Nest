@@ -28,6 +28,24 @@ class DocumentService
         return $this->documentRepository->loadForShow($document);
     }
 
+    /**
+     * @return array{isPreviewable: bool, type: string}
+     */
+    public function resolvePreviewCapability(Document $document): array
+    {
+        $mimeType = strtolower($document->mime_type);
+
+        if ($mimeType === 'application/pdf') {
+            return ['isPreviewable' => true, 'type' => 'pdf'];
+        }
+
+        if (str_starts_with($mimeType, 'image/')) {
+            return ['isPreviewable' => true, 'type' => 'image'];
+        }
+
+        return ['isPreviewable' => false, 'type' => 'unsupported'];
+    }
+
     public function createForUser(User $user, StoreDocumentData $data): Document
     {
         $storedPath = $this->storage->store($data->file, $user->id);

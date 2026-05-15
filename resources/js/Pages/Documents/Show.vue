@@ -1,7 +1,15 @@
 <script setup>
-import {ref} from 'vue'
+import {computed, onBeforeUnmount, ref, watch} from 'vue'
 import {Head, router} from '@inertiajs/vue3'
-import {ArchiveBoxIcon, ArrowDownTrayIcon, ArrowPathIcon, PencilIcon, TrashIcon} from '@heroicons/vue/24/outline'
+import {
+    ArchiveBoxIcon,
+    ArrowDownTrayIcon,
+    ArrowPathIcon,
+    EyeIcon,
+    PencilIcon,
+    TrashIcon,
+    XMarkIcon,
+} from '@heroicons/vue/24/outline'
 import AppLayout from '../../Layouts/AppLayout.vue'
 import Button from '../../Components/UI/Button.vue'
 import Badge from '../../Components/UI/Badge.vue'
@@ -11,9 +19,15 @@ const props = defineProps({
     document: Object,
     previewUrl: String,
     downloadUrl: String,
+    preview: Object,
 })
 
 const deleting = ref(false)
+const isMobilePreviewOpen = ref(false)
+
+const isPreviewable = computed(() => props.preview?.isPreviewable === true)
+const isPdfPreview = computed(() => props.preview?.type === 'pdf')
+const isImagePreview = computed(() => props.preview?.type === 'image')
 
 const getStatusVariant = (status) => {
     switch (status) {
@@ -36,6 +50,18 @@ const restore = () => {
     router.post(`/documents/${props.document.id}/restore`)
 }
 
+const openMobilePreview = () => {
+    if (!isPreviewable.value) {
+        return
+    }
+
+    isMobilePreviewOpen.value = true
+}
+
+const closeMobilePreview = () => {
+    isMobilePreviewOpen.value = false
+}
+
 const destroyDocument = () => {
     router.delete(`/documents/${props.document.id}`, {
         onBefore: () => window.confirm('Delete this document? This will permanently remove the file.'),
@@ -47,6 +73,20 @@ const destroyDocument = () => {
         },
     })
 }
+
+watch(isMobilePreviewOpen, (isOpen) => {
+    if (typeof document === 'undefined') {
+        return
+    }
+
+    document.body.style.overflow = isOpen ? 'hidden' : ''
+})
+
+onBeforeUnmount(() => {
+    if (typeof document !== 'undefined') {
+        document.body.style.overflow = ''
+    }
+})
 </script>
 
 <template>
@@ -99,11 +139,55 @@ const destroyDocument = () => {
                 </div>
             </header>
 
+            <Card class="sm:hidden" padding="p-4">
+                <div class="space-y-3">
+                    <Button
+                        v-if="isPreviewable"
+                        class="w-full"
+                        data-testid="mobile-preview-open"
+                        type="button"
+                        @click="openMobilePreview"
+                    >
+                        <EyeIcon class="mr-2 h-4 w-4"/>
+                        Open Preview
+                    </Button>
+                    <Button v-else :href="downloadUrl" class="w-full">
+                        <ArrowDownTrayIcon class="mr-2 h-4 w-4"/>
+                        Download File
+                    </Button>
+                </div>
+            </Card>
+
             <div class="grid gap-6 lg:grid-cols-3">
                 <div class="space-y-6 lg:col-span-2">
-                    <Card padding="p-0">
-                        <div class="aspect-4/3 w-full overflow-hidden bg-zinc-100 sm:aspect-auto sm:h-[70vh]">
-                            <iframe :src="previewUrl" class="h-full w-full border-none" title="Document preview"/>
+                    <Card class="hidden sm:block" padding="p-0">
+                        <div
+                            v-if="isImagePreview"
+                            class="flex aspect-4/3 w-full items-center justify-center overflow-hidden bg-zinc-100 sm:aspect-auto sm:h-[70vh]"
+                        >
+                            <img :src="previewUrl" alt="Document preview" class="h-full w-full object-contain">
+                        </div>
+                        <div
+                            v-else-if="isPdfPreview"
+                            class="aspect-4/3 w-full overflow-hidden bg-zinc-100 sm:aspect-auto sm:h-[70vh]"
+                        >
+                            <object :data="previewUrl" class="h-full w-full" type="application/pdf">
+                                <div class="flex h-full items-center justify-center bg-zinc-50 p-4">
+                                    <Button :href="downloadUrl">
+                                        <ArrowDownTrayIcon class="mr-2 h-4 w-4"/>
+                                        Download PDF
+                                    </Button>
+                                </div>
+                            </object>
+                        </div>
+                        <div v-else class="flex h-64 items-center justify-center bg-zinc-50 p-6">
+                            <div class="space-y-3 text-center">
+                                <p class="text-sm text-zinc-600">Preview is not available for this file type.</p>
+                                <Button :href="downloadUrl">
+                                    <ArrowDownTrayIcon class="mr-2 h-4 w-4"/>
+                                    Download File
+                                </Button>
+                            </div>
                         </div>
                     </Card>
                 </div>
@@ -151,5 +235,55 @@ const destroyDocument = () => {
                 </div>
             </div>
         </div>
+
+        <Teleport to="body">
+            <div
+                v-if="isMobilePreviewOpen"
+                class="fixed inset-0 z-50 bg-zinc-950 sm:hidden"
+                data-testid="mobile-preview-panel"
+            >
+                <div class="flex h-full flex-col">
+                    <div class="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
+                        <button
+                            class="rounded-md p-2 text-zinc-200 hover:bg-zinc-800"
+                            data-testid="mobile-preview-close"
+                            type="button"
+                            @click="closeMobilePreview"
+                        >
+                            <XMarkIcon class="h-5 w-5"/>
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <Button :href="`/documents/${document.id}/edit`" size="sm" variant="secondary">
+                                <PencilIcon class="mr-1.5 h-4 w-4"/>
+                                Edit
+                            </Button>
+                            <Button :href="downloadUrl" data-testid="mobile-preview-download" size="sm">
+                                <ArrowDownTrayIcon class="mr-1.5 h-4 w-4"/>
+                                Download
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div class="min-h-0 flex-1 bg-zinc-900">
+                        <div v-if="isImagePreview" class="flex h-full items-center justify-center p-2">
+                            <img :src="previewUrl" alt="Document preview" class="h-full w-full object-contain">
+                        </div>
+                        <object
+                            v-else-if="isPdfPreview"
+                            :data="previewUrl"
+                            class="h-full w-full"
+                            type="application/pdf"
+                        >
+                            <div class="flex h-full items-center justify-center p-6">
+                                <Button :href="downloadUrl">
+                                    <ArrowDownTrayIcon class="mr-2 h-4 w-4"/>
+                                    Download PDF
+                                </Button>
+                            </div>
+                        </object>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </AppLayout>
 </template>
