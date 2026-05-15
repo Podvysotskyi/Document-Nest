@@ -13,11 +13,11 @@ class StoreDocumentController extends Controller
 
     public function __invoke(StoreDocumentRequest $request): RedirectResponse
     {
-        $document = $this->documentService->createForUser(
+        $this->documentService->createForUser(
             $request->user(),
             $request->toDto(),
         );
 
-        return redirect()->route('documents.show', $document);
+        return redirect()->route('documents.index');
     }
 }

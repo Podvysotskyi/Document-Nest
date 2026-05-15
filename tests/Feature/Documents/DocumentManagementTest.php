@@ -152,7 +152,7 @@ class DocumentManagementTest extends TestCase
         ]);
 
         $document = Document::first();
-        $response->assertRedirect(route('documents.show', $document));
+        $response->assertRedirect(route('documents.index'));
 
         $this->assertSame('My Contract', $document->title);
         $this->assertSame($user->id, $document->user_id);

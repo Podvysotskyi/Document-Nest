@@ -32,7 +32,9 @@ class AuthTest extends TestCase
     {
         $this->get(route('login'))
             ->assertStatus(200)
-            ->assertSee('Sign in to Document Nest');
+            ->assertSee('Sign in to Document Nest')
+            ->assertSee('License')
+            ->assertSee('Developed by');
     }
 
     public function test_authenticated_user_is_redirected_from_login_page(): void
